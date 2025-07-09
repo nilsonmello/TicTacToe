@@ -12,7 +12,6 @@ public class TableManager : MonoBehaviour
     {
 
     }
-
     public void CreateTable(List<Slot> slotTypes, int slotQuantity)
     {
         if (tableCreated)
@@ -41,9 +40,8 @@ public class TableManager : MonoBehaviour
     public void UseEffectOnSlot(int slotIndex, Card card)
     {
         if (!tableCreated) Debug.LogError("No Table, create it dumbass [EffectOnSlot]");
-        if (card.checkUseCase() == UseCase.SLOT)
+        if (card.getUseCase() == UseCase.SLOT)
             table.GetSlot(slotIndex).UseCard(card);
         else Debug.LogWarning($"Can't use the Card [{card.getName()}] on Slots");
     }
-
 }
