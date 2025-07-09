@@ -1,12 +1,5 @@
 using UnityEngine;
 
-public enum UseCase
-{
-    SLOT,
-    PLAYER,
-    GLOBAL
-}
-
 public abstract class Card
 {
     private string cardName;

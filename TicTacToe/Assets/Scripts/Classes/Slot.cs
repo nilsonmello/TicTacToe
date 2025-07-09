@@ -1,32 +1,30 @@
+using UnityEditor;
 using UnityEngine;
 
-public class Slot 
+public abstract class Slot 
 {
     private Effect slotEffect;
-
-    private Ability ability;
-
     private int useLimit;
-    public void UseSlotEffect()
+    public virtual void UseSlotEffect()
     {
         slotEffect.ActivateEffect();
     }
 
-    public void SetSlotEffect(Effect effect)
+    public virtual void SetSlotEffect(Effect effect)
     {
         slotEffect = effect;
     }
 
-    public Effect GetSlotEffect()
+    public virtual Effect GetSlotEffect()
     {
         return slotEffect;
     }
 
-    public int GetUseLimit()
+    public virtual int GetUseLimit()
     {
         return useLimit;
     }
-    public void UseCard(Card card)
+    public virtual void UseCard(Card card)
     {
         card.UseAbility(this);
     }

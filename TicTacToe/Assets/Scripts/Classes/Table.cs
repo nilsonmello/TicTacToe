@@ -1,36 +1,96 @@
 using UnityEngine;
 using System.Collections.Generic;
-public class Table
+public class Table : MonoBehaviour
 {
-    private List<Slot> slots;
+    private List<List<Slot>> slots;
 
     private List<GameObject> generated_slots;
-    private int tableSize;
 
-    // TODO , remember that we need to generate the table, based on SlotTypes,
-    // these have limits of use, so if we can only use 4 Slots of type (Greed),
-    // we DON'T USE MORE SLOTS OF THAT TYPE when generating the table.
+    public GameObject slotPrefab;
+    private int gridSize;
+    
+    public void GenerateTable(List<System.Type> slotTypes, Slot defaultSlot)
+        {
+            Dictionary<System.Type, int> slotUsage = new Dictionary<System.Type, int>();
+            foreach (var slotType in slotTypes)
+            {
+                slotUsage[slotType] = 0;
+            }
 
-    // tableSize can determine the size of the table, in a manner like X times X
-    // so a grid would be of size tableSize times tableSize so a 10x10
-    // would be a 100 itens grid.
+            List<List<Slot>> table = new List<List<Slot>>();
 
-    // The GenerateGraphic should look at the grid we have and when generating
-    // cut the lines and collums based on tableSize, so a 10x10 would break at 
-    // the 9th item of the list, it also should add the generated Objects in ORDER
-    // to generated_slots list. 
+            for (int i = 0; i < gridSize; i++)
+            {
+                List<Slot> row = new List<Slot>();
+                for (int j = 0; j < gridSize; j++)
+                {
+                    List<System.Type> available = new List<System.Type>();
+                    foreach (var slotType in slotTypes)
+                    {
+                        // Create a temp instance to check the limit
+                        Slot tempSlot = (Slot)System.Activator.CreateInstance(slotType);
+                        // Debug.Log($"{slotType.Name} limit: {tempSlot.GetUseLimit()} usage: {slotUsage[slotType]}");
+                        if (slotUsage[slotType] < tempSlot.GetUseLimit())
+                            available.Add(slotType);
+                    }
 
-    public void GenerateTable(List<Slot> SlotTypes) //
+                    Slot chosenSlot;
+
+                    if (available.Count > 0)
+                    {
+                        var chosenType = available[UnityEngine.Random.Range(0, available.Count)];
+                        chosenSlot = (Slot)System.Activator.CreateInstance(chosenType);
+                        slotUsage[chosenType]++;
+                        //Debug.Log($"slots[{i}][{j}] is {chosenSlot}");
+                    }
+                    else
+                    {
+                        chosenSlot = defaultSlot;
+                        //Debug.Log($"slots[{i}][{j}] is {chosenSlot} (default)");
+                    }
+                    row.Add(chosenSlot);
+                }
+                table.Add(row);
+            }
+            slots = table;
+        }
+    public void GenerateGraphic(float spacing)
     {
+        generated_slots = new List<GameObject>();
+        Transform parentTransform = this.transform;
 
-    }   
-    public void GenerateGraphic()
-    {
+        float offset = (gridSize - 1) * spacing * 0.5f;
 
+        for (int x = 0; x < gridSize; x++)
+        {
+            for (int y = 0; y < gridSize; y++)
+            {
+                Vector2 localPosition = new Vector2(x * spacing - offset, y * spacing - offset);
+                GameObject slotObj = GameObject.Instantiate(
+                    slotPrefab,
+                    parentTransform.position + (Vector3)localPosition,
+                    Quaternion.identity,
+                    parentTransform
+                );
+                slotObj.name = $"Slot_{x}_{y}";
+                slotObj.transform.localPosition = localPosition;
+                var controller = slotObj.GetComponent<SlotController>();
+                    if (controller != null)
+                        controller.SetSlot(slots[x][y]);
+                    else
+                        Debug.LogError("Slot prefab missing SlotController!");
+
+                generated_slots.Add(slotObj);
+            }
+        }
     }
+
     public Slot GetSlot(int slotIndex)
     {
         return generated_slots[slotIndex].GetComponent<Slot>();
     }
-    
+    public void SetSlotQuantity(int quantity)
+    {
+        gridSize = quantity;
+    }
 }
