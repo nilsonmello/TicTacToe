@@ -1,10 +1,9 @@
 using UnityEngine;
-using System.Collections.Generic;
 using Newtonsoft.Json.Linq; 
 public class LocalizationManager : MonoBehaviour
 {
-    public static string DefaultLanguage = "en";
-    public string currentLanguage = DefaultLanguage;
+    public static Language DefaultLanguage = Language.English;
+    public Language currentLanguage = DefaultLanguage;
     public static LocalizationManager Instance { get; private set; }
 
     private JObject localizationData;
@@ -15,7 +14,7 @@ public class LocalizationManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            LoadLocalization(currentLanguage);
+            SetLanguage(DefaultLanguage);
         }
         else
         {
@@ -23,7 +22,21 @@ public class LocalizationManager : MonoBehaviour
         }
     }
 
-
+    public void SetLanguage(Language language)
+    {
+        string langCode = LanguageToCode(language);
+        LoadLocalization(langCode);
+        currentLanguage = language;
+    }
+    private string LanguageToCode(Language language)
+    {
+        switch (language)
+        {
+            case Language.English: return "en";
+            case Language.PortugueseBrazil:  return "pt-BR";
+            default: return "en";
+        }
+    }
     void LoadLocalization(string language)
     {
         TextAsset jsonFile = Resources.Load<TextAsset>($"Localization/{language}");
@@ -63,17 +76,5 @@ public class LocalizationManager : MonoBehaviour
             }
         }
         return token.Type == JTokenType.String ? token.ToString() : key;
-    }
-    public void SetLanguage(string language)
-    {
-        if (localizationData != null && localizationData.ContainsKey(language))
-        {
-            currentLanguage = language;
-            LoadLocalization(language);
-        }
-        else
-        {
-            Debug.LogError($"Language '{language}' not supported.");
-        }
     }
 }

@@ -1,0 +1,9 @@
+public enum GameState
+{
+    INITIALIZING,
+    WAITING_FOR_PLAYER,
+    PLAYER_TURN,
+    SLOT_SELECTION,
+    GAME_OVER,
+    RESTARTING
+}
