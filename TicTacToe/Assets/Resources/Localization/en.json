@@ -1,0 +1,60 @@
+{
+  "UI": {
+    "Menu": {
+      "Start": "Start",
+      "Settings": "Settings",
+      "Quit": "Quit"
+    },
+    "Pause": {
+      "Resume": "Resume",
+      "Quit": "Quit"
+    },
+    "Settings": {
+      "Language": "Language",
+      "Volume": "Volume",
+      "Graphics": "Graphics"
+    },
+    "Stats": {
+      "Life": "Life",
+      "Energy": "Energy"
+    },
+    "Actions": {
+      "Yes": "Yes",
+      "No": "No",
+      "Use": "Use",
+      "Cancel": "Cancel"
+    }
+  },
+  "Gameplay": {
+    "Abilities": {
+      "Toxic": {
+        "Name": "Toxic Ability"
+      }
+    },
+    "Effects": {
+      "Toxic": {
+        "Name": "Toxic Effect"
+      }
+    },
+    "Cards": {
+      "ToxicCard": {
+        "Name": "Toxic Card",
+        "Description": "This card poisons the opponent's next move."
+      }
+    },
+    "Slots": {
+      "DefaultSlot": {
+        "Name": "Default Slot",
+        "Description": "Slot withouut any special properties."
+      },
+      "ToxicSlot": {
+        "Name": "Toxic Slot",
+        "Description": "Slot that applies a toxic effect."
+      },
+      "BrightSlot": {
+        "Name": "Bright Slot",
+        "Description": ""
+      }
+    }
+  }
+}

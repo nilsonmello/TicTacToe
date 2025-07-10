@@ -12,7 +12,7 @@ public class TableManager : MonoBehaviour
     public int gridSize = 3; // Default grid size, can be changed in inspector
     public float spacing = 1.1f; // Default spacing, can be changed in inspector
     private Slot defaultSlot = new DefaultSlot();
-    private List<System.Type> slotTypes  = new List<System.Type> { typeof(ToxicSlot), typeof(BrightSlot) };
+    private List<System.Type> slotTypes = new List<System.Type> { typeof(ToxicSlot), typeof(BrightSlot) };
     void Start()
     {
         CreateTable(slotTypes, defaultSlot, gridSize, spacing);
@@ -22,7 +22,8 @@ public class TableManager : MonoBehaviour
         if (tableCreated)
         {
             Debug.LogWarning("Tried creating Table but Table already created, try deleting it before creating.");
-        };
+        }
+        ;
         tableObject = GameObject.Instantiate(tablePrefab);
         tableObject.name = "GameTable";
         table = tableObject.GetComponent<Table>();
@@ -34,7 +35,7 @@ public class TableManager : MonoBehaviour
 
     public void DeleteTable()
     {
-        Destroy(tableObject);   
+        Destroy(tableObject);
     }
 
     public void TriggerSlotEffect(int slotIndex)
@@ -43,7 +44,7 @@ public class TableManager : MonoBehaviour
         table.GetSlot(slotIndex).UseSlotEffect();
     }
 
-    public void UseEffectOnSlot(int slotIndex, Card card)
+    public void UseAbilityOnSlot(int slotIndex, Card card)
     {
         if (!tableCreated) Debug.LogError("No Table, create it dumbass [EffectOnSlot]");
         if (card.getUseCase() == UseCase.SLOT)

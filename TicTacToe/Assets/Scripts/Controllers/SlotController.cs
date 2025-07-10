@@ -13,7 +13,7 @@ public class SlotController : MonoBehaviour
     public void SetSlot(Slot newSlot)
     {
         slot = newSlot;
-        slotDebugInfo = $"SlotController on {gameObject.name} set to slot type: {slot}";
+        slotDebugInfo = $"SlotController on {gameObject.name} set to slot type: {slot.GetName()}";
     }
         
 }

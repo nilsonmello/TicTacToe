@@ -1,0 +1,60 @@
+{
+  "UI": {
+    "Menu": {
+      "Start": "Iniciar",
+      "Settings": "Configurações",
+      "Quit": "Sair"
+    },
+    "Pause": {
+      "Resume": "Continuar",
+      "Quit": "Sair"
+    },
+    "Settings": {
+      "Language": "Idioma",
+      "Volume": "Volume",
+      "Graphics": "Gráficos"
+    },
+    "Stats": {
+      "Life": "Vida",
+      "Energy": "Energia"
+    },
+    "Actions": {
+      "Yes": "Sim",
+      "No": "Não",
+      "Use": "Usar",
+      "Cancel": "Cancelar"
+    }
+  },
+  "Gameplay": {
+    "Abilities": {
+      "Toxic": {
+        "Name": "Habilidade Tóxica"
+      }
+    },
+    "Effects": {
+      "Toxic": {
+        "Name": "Efeito Tóxico"
+      }
+    },
+    "Cards": {
+      "ToxicCard": {
+        "Name": "Carta Tóxica",
+        "Description": "Esta carta envenena o próximo movimento do oponente."
+      }
+    },
+    "Slots": {
+      "DefaultSlot": {
+        "Name": "Slot Padrão",
+        "Description": "Slot sem propriedades especiais."
+      },
+      "ToxicSlot": {
+        "Name": "Slot Tóxico",
+        "Description": "Slot que aplica um efeito tóxico."
+      },
+      "BrightSlot": {
+        "Name": "Slot Brilhante",
+        "Description": "Slot que aplica um efeito brilhante."
+      }
+    }
+  }
+}

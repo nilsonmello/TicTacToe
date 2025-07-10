@@ -1,10 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 
-public abstract class Slot 
+public abstract class Slot
 {
+    private string name;
     private Effect slotEffect;
     private int useLimit;
+
+    private SlotStates state = SlotStates.EMPTY;
+
     public virtual void UseSlotEffect()
     {
         slotEffect.ActivateEffect();
@@ -27,6 +31,14 @@ public abstract class Slot
     public virtual void UseCard(Card card)
     {
         card.UseAbility(this);
+    }
+    public virtual string GetName()
+    {
+        return name;
+    }
+    public SlotStates GetState()
+    {
+        return state;
     }
 }
 
