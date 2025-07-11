@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,8 +8,12 @@ public abstract class Slot
     private Effect slotEffect;
     private int useLimit;
 
-    private SlotStates state = SlotStates.EMPTY;
+    public SlotStates slotState = SlotStates.EMPTY;
 
+    public Player owner = null;
+
+
+    public event Action OnOwnerChanged;
     public virtual void UseSlotEffect()
     {
         slotEffect.ActivateEffect();
@@ -36,9 +41,22 @@ public abstract class Slot
     {
         return name;
     }
-    public SlotStates GetState()
+    public virtual SlotStates GetState()
     {
-        return state;
+        return slotState;
+    }
+    public virtual Player GetOwner()
+    {
+        return owner;
+    }
+    public virtual void SetOwner(Player newOwner)
+    {
+        owner = newOwner;
+        OnOwnerChanged?.Invoke();
+    }
+    public virtual void SetState(SlotStates newState)
+    {
+        slotState = newState;
     }
 }
 

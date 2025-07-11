@@ -14,7 +14,7 @@ public class LocalizationManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            SetLanguage(DefaultLanguage);
+            SetLanguage(currentLanguage);
         }
         else
         {
