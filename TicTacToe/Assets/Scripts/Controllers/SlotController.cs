@@ -21,13 +21,15 @@ public class SlotController : MonoBehaviour
             slot.OnOwnerChanged -= UpdateSlotInfo;
         }
         slot = newSlot;
-    if (slot != null)
-    {
-        slot.OnOwnerChanged -= SpawnOwnerIcon;    // Defensive: ensure no duplicates
-        slot.OnOwnerChanged -= UpdateSlotInfo;
+
+        ownerName = "";
+        slotTypeInfo = "";
+        slotStateInfo = "";
+
         slot.OnOwnerChanged += SpawnOwnerIcon;
         slot.OnOwnerChanged += UpdateSlotInfo;
-    }
+        UpdateSlotInfo();
+        SpawnOwnerIcon();
     }
 
 

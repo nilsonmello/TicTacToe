@@ -12,7 +12,7 @@ public class TableManager : MonoBehaviour
     public int xSize = 3; // Default grid size, can be changed in inspector
     [Range(2, 30)]
     public int ySize = 3; // Default grid size, can be changed in inspector
-    public float spacing = 1.1f; // Default spacing, can be changed in inspector
+    public float spacing = 1.1f; 
     private Slot defaultSlot = new DefaultSlot();
     private List<System.Type> slotTypes = new List<System.Type> { typeof(ToxicSlot), typeof(BrightSlot) };
     public void Initialize()
@@ -24,8 +24,7 @@ public class TableManager : MonoBehaviour
         if (tableCreated)
         {
             Debug.LogWarning("Tried creating Table but Table already created, try deleting it before creating.");
-        }
-        ;
+        };
         tableObject = GameObject.Instantiate(tablePrefab);
         tableObject.name = "GameTable";
         table = tableObject.GetComponent<Table>();

@@ -7,57 +7,82 @@ public class Table : MonoBehaviour
     private List<List<GameObject>> slotObjectGrid;
 
     private readonly Dictionary<Vector2Int, GameObject> slotObjects = new Dictionary<Vector2Int, GameObject>();
+    private Queue<GameObject> slotPool = new Queue<GameObject>();
     public GameObject slotPrefab;
     private int xSize;
     private int ySize;
+    private Dictionary<System.Type, int> slotUsage = new();
+    private List<System.Type> slotTypes = new List<System.Type>();
+    private Slot defaultSlot;
 
+    private float spacing;
+
+    /// <summary>
+    /// Generates the table structure with the specified slot types and default slot.
+    /// </summary>
     public void GenerateTable(List<System.Type> slotTypes, Slot defaultSlot)
     {
-        Dictionary<System.Type, int> slotUsage = new Dictionary<System.Type, int>();
-        foreach (var slotType in slotTypes)
+        if (slotTypes == null || slotTypes.Count == 0)
         {
-            slotUsage[slotType] = 0;
+            Debug.LogError("No slot types provided, cannot generate table.");
+            return;
         }
-
-        List<List<Slot>> table = new List<List<Slot>>();
-
-        for (int i = 0; i < xSize; i++)
+        if (defaultSlot == null)
         {
-            List<Slot> row = new List<Slot>();
-            for (int j = 0; j < ySize; j++)
+            Debug.LogError("Default slot cannot be null, using DefaultSlot instead.");
+            defaultSlot = new DefaultSlot();
+        }
+        this.slotTypes = slotTypes;
+        this.defaultSlot = defaultSlot;
+
+        foreach (var slotType in slotTypes)
+            slotUsage[slotType] = 0;
+
+        List<List<Slot>> table = new();
+
+        for (int x = 0; x < xSize; x++)
+        {
+            List<Slot> column = new();
+            for (int y = 0; y < ySize; y++)
             {
-                List<System.Type> available = new List<System.Type>();
+                List<System.Type> available = new();
                 foreach (var slotType in slotTypes)
                 {
-                    // Create a temp instance to check the limit
                     Slot tempSlot = (Slot)System.Activator.CreateInstance(slotType);
-                    // Debug.Log($"{slotType.Name} limit: {tempSlot.GetUseLimit()} usage: {slotUsage[slotType]}");
                     if (slotUsage[slotType] < tempSlot.GetUseLimit())
                         available.Add(slotType);
                 }
 
                 Slot chosenSlot;
-
                 if (available.Count > 0)
                 {
                     var chosenType = available[UnityEngine.Random.Range(0, available.Count)];
                     chosenSlot = (Slot)System.Activator.CreateInstance(chosenType);
                     slotUsage[chosenType]++;
-                    //Debug.Log($"slots[{i}][{j}] is {chosenSlot}");
                 }
                 else
                 {
                     chosenSlot = (Slot)System.Activator.CreateInstance(defaultSlot.GetType());
-                    //Debug.Log($"slots[{i}][{j}] is {chosenSlot} (default)");
                 }
-                row.Add(chosenSlot);
+                column.Add(chosenSlot);
             }
-            table.Add(row);
+            table.Add(column);
         }
         slotsMatrix = table;
     }
+    /// <summary>
+    /// Regenerates the table structure with the already defined slot types and default slot.
+    /// </summary>
+    public void RegenerateTable()
+    {
+        foreach (var slotType in slotTypes)
+            slotUsage[slotType] = 0;
+
+        GenerateTable(slotTypes, defaultSlot);
+    }
     public void GenerateGraphic(float spacing)
     {
+        this.spacing = spacing;
         slotObjectGrid = new List<List<GameObject>>();
         Transform parentTransform = this.transform;
 
@@ -70,39 +95,49 @@ public class Table : MonoBehaviour
                 slotObjectGrid.Add(new List<GameObject>());
             for (int y = 0; y < ySize; y++)
             {
-                Vector2 localPosition = new Vector2(x * spacing - offsetX, y * spacing - offsetY);
-                GameObject slotObj = GameObject.Instantiate(
-                    slotPrefab,
-                    parentTransform.position + (Vector3)localPosition,
-                    Quaternion.identity,
-                    parentTransform
-                );
+                GameObject slotObj;
+                 Vector2 localPosition = new Vector2(x * spacing - offsetX, y * spacing - offsetY);
+                if (slotPool.Count > 0)
+                {
+                    slotObj = slotPool.Dequeue();
+                    slotObj.SetActive(true);
+                }
+                else
+                {
+                    slotObj = GameObject.Instantiate(
+                       slotPrefab,
+                       parentTransform.position + (Vector3)localPosition,
+                       Quaternion.identity,
+                       parentTransform
+                   );
+                }
                 slotObj.name = $"Slot_{x}_{y}";
                 slotObj.transform.localPosition = localPosition;
-                var controller = slotObj.GetComponent<SlotController>();
-                if (controller != null)
+                if (slotObj.TryGetComponent<SlotController>(out var controller))
                     controller.SetSlot(slotsMatrix[x][y]);
                 else
                     Debug.LogError("Slot prefab missing SlotController!");
 
-                if (slotObjectGrid.Count <= x)
-                    slotObjectGrid.Add(new List<GameObject>());
-
-                Vector2Int gridPos = new Vector2Int(x, y);
+                Vector2Int gridPos = new(x, y);
                 slotObjects[gridPos] = slotObj;
                 slotObjectGrid[x].Add(slotObj);
             }
         }
     }
-    public void SetSlotQuantity(int quantityX, int quantityY)
+    public void RegenerateGraphic()
     {
-        xSize = quantityX;
-        ySize = quantityY;
+        foreach (var slotObject in slotObjects.Values)
+        {
+            slotObject.SetActive(false);
+            slotPool.Enqueue(slotObject);
+        }
+        slotObjects.Clear();
+        slotObjectGrid.Clear();
+        GenerateGraphic(spacing);
     }
-
     public GameObject GetOneSlotObject(int x, int y)
     {
-        Vector2Int position = new Vector2Int(x, y);
+        Vector2Int position = new(x, y);
         if (slotObjects.TryGetValue(position, out GameObject slotObject))
         {
             return slotObject;
@@ -118,7 +153,11 @@ public class Table : MonoBehaviour
     {
         return slotsMatrix;
     }
-
+    public void SetSlotQuantity(int quantityX, int quantityY)
+    {
+        xSize = quantityX;
+        ySize = quantityY;
+    }
     public int GetXSize()
     {
         return xSize;

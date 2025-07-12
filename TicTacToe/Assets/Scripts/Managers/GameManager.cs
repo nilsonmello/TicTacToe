@@ -62,18 +62,18 @@ public class GameManager : MonoBehaviour
     }
     void TestWinCondition()
     {
-        
+
         var slots = tableManager.GetTable().GetSlots();
         var testOwner = new Player("TestPlayer", 1, player1Sprite);
         int xSize = tableManager.GetTable().GetXSize();
         int ySize = tableManager.GetTable().GetYSize();
         int diagSize = Mathf.Min(xSize, ySize);
-    for (int x = 0; x < xSize; x++)
-        for (int y = 0; y < ySize; y++)
-        {
-            slots[x][y].SetState(SlotStates.EMPTY);
-            slots[x][y].SetOwner(null);
-        }
+        for (int x = 0; x < xSize; x++)
+            for (int y = 0; y < ySize; y++)
+            {
+                slots[x][y].SetState(SlotStates.EMPTY);
+                slots[x][y].SetOwner(null);
+            }
         Debug.Log(diagSize);
         for (int i = 0; i < diagSize; i++)
         {
