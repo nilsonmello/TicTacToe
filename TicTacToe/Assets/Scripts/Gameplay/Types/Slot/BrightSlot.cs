@@ -7,7 +7,7 @@ public class BrightSlot : Slot
     }
     public override string GetName()
     {
-        return LocalizationManager.Instance.Get("Gameplay.Slots.BrightSlot.Name");
+        return LocalizationManager.Instance.Get(LocalizationKeys.Gameplay.Slots.BrightSlot.Name);
     }
 
 }

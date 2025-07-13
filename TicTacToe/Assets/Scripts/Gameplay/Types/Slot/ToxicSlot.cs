@@ -7,7 +7,7 @@ public class ToxicSlot : Slot
     }
    public override string GetName()
    {
-       return LocalizationManager.Instance.Get("Gameplay.Slots.ToxicSlot.Name");
+       return LocalizationManager.Instance.Get(LocalizationKeys.Gameplay.Slots.ToxicSlot.Name);
    }
 
 }
