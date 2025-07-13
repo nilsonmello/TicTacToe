@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public abstract class Card
+[System.Serializable]
+public class Card
 {
     private string cardName;
     private string description;
