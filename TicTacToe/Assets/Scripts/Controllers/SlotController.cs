@@ -1,6 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class SlotController : MonoBehaviour
+public class SlotController : MonoBehaviour, IPointerClickHandler
 {
 
     [SerializeField] private string slotTypeInfo;
@@ -32,6 +33,18 @@ public class SlotController : MonoBehaviour
         SpawnOwnerIcon();
     }
 
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (slot != null
+        && slot.GetState() == SlotStates.EMPTY
+        && GameManager.Instance.GetCurrentPlayer() != null)
+        {
+            slot.SetOwner(GameManager.Instance.GetCurrentPlayer());
+            slot.SetState(SlotStates.OCCUPIED);
+            GameManager.Instance.ChangeTurn();
+            // Debug.Log($"Slot {slot.GetName()} used by {slot.GetOwner()?.GetName() ?? "No Owner"}");
+        }
+    }
 
     public void SpawnOwnerIcon()
     {

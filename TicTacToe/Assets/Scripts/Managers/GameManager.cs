@@ -11,46 +11,86 @@ public class GameManager : MonoBehaviour
         typeof(ToxicSlot),
         typeof(BrightSlot)
     };
+    public static GameManager Instance { get; private set; }
     public Slot defaultSlot = new DefaultSlot();
     private GameState gameState = GameState.INITIALIZING;
 
-    public Sprite player1Sprite;
-    public Sprite player2Sprite;
+    public List<Sprite> playerSprites = new List<Sprite>();
+    private List<Player> players = new List<Player>();
 
-    bool tested = false;
+    private int currentPlayer = 0;
+
+    public Player GetCurrentPlayer()
+    {
+        return players[currentPlayer];
+    }
+    public void ChangeTurn()
+    {
+        gameState = GameState.CHANGING_TURN;   
+    }
+
+    public void SwitchPlayer()
+    {
+        currentPlayer = (currentPlayer + 1) % players.Count;
+        Debug.Log("Switched to player: " + GetCurrentPlayer().GetName());
+    }
+
+    public Player GetPlayer(int playerIndex)
+    {
+        return players[playerIndex];
+    }
+
     void Awake()
     {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
         tableManager = GetComponent<TableManager>();
+        for (int i = 0; i < playerSprites.Count; i++)
+        {
+            players.Add(new Player($"Player {i + 1}", i + 1, playerSprites[i]));
+        }
     }
 
-    void Start()
-    {
-
-    }
 
     void Update()
     {
+        Debug.Log($"Current Game State: {gameState}");
         switch (gameState)
         {
             case GameState.INITIALIZING:
                 tableManager.Initialize();
                 gameState = GameState.PLAYING;
                 break;
-            case GameState.PLAYER_TURN:
+            case GameState.START_TURN:
+                GetCurrentPlayer().AddEnergyPoints();
+                gameState = GameState.PLAYING;
                 break;
             case GameState.CHANGING_TURN:
-                break;
-            case GameState.WAITING_FOR_PLAYER:
-                break;
-            case GameState.WAITING_FOR_AI:
+            string winner = tableManager.CheckVictory().GetWinner()?.GetName();
+                Debug.Log($"State: {gameState}, CurrentPlayer: {GetCurrentPlayer().GetName()}");
+                Debug.Log(winner);
+                if (winner != null)
+                {
+                    gameState = GameState.GAME_OVER;
+                    Debug.Log($"Game Over! Winner: {winner}");
+                    return;
+                }
+                SwitchPlayer();
+                gameState = GameState.START_TURN;
                 break;
             case GameState.PLAYING:
-                if (!tested)
-                {
-                    TestWinCondition();
-                }
                 break;
             case GameState.GAME_OVER:
+                Debug.Log("Game Over! Resetting game state.");
+                // gameState = GameState.RESTARTING;
                 break;
             case GameState.RESTARTING:
                 gameState = GameState.INITIALIZING;
@@ -59,31 +99,5 @@ public class GameManager : MonoBehaviour
                 Debug.LogError("Unknown game state: " + gameState);
                 break;
         }
-    }
-    void TestWinCondition()
-    {
-
-        var slots = tableManager.GetTable().GetSlots();
-        var testOwner = new Player("TestPlayer", 1, player1Sprite);
-        int xSize = tableManager.GetTable().GetXSize();
-        int ySize = tableManager.GetTable().GetYSize();
-        int diagSize = Mathf.Min(xSize, ySize);
-        for (int x = 0; x < xSize; x++)
-            for (int y = 0; y < ySize; y++)
-            {
-                slots[x][y].SetState(SlotStates.EMPTY);
-                slots[x][y].SetOwner(null);
-            }
-        Debug.Log(diagSize);
-        for (int i = 0; i < diagSize; i++)
-        {
-            Debug.Log($"Setting slot ({i},{ySize - 1 - i})");
-            slots[xSize - 1 - i][i].SetState(SlotStates.OCCUPIED);
-            slots[xSize - 1 - i][i].SetOwner(testOwner);
-        }
-        string winner = tableManager.CheckVictory().GetWinner()?.GetName();
-        WinState wincon = tableManager.CheckVictory().GetWinCondition();
-        Debug.Log("Winner: " + winner + " Win Condition: " + wincon);
-        tested = true;
     }
 }

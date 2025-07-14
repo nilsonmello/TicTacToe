@@ -1,10 +1,8 @@
 public enum GameState
 {
     INITIALIZING,
-    PLAYER_TURN,
+    START_TURN,
     CHANGING_TURN,
-    WAITING_FOR_PLAYER,
-    WAITING_FOR_AI,
     PLAYING,
     GAME_OVER,
     RESTARTING
