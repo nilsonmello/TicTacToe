@@ -1,57 +1,22 @@
 using UnityEngine;
 
-[System.Serializable]
-public class Card
+public abstract class Card
 {
-    private string cardName;
-    private string description;
-    private int energyCost;
-    private Ability ability;
-    private UseCase useCase;
-
-    public Card(string name, string description, int energyCost, Ability ability, UseCase usecase)
-    {
-        this.cardName = name;
-        this.description = description;
-        this.energyCost = energyCost;
-        this.ability = ability;
-        this.useCase = usecase;
-    }
-
-    public string getName()
-    {
-        return cardName;
-    }
-
-    public string getDescription()
-    {
-        return description;
-    }
-
-    public int getEnergyCost()
-    {
-        return energyCost;
-    }
-
-    public Ability getAbility()
-    {
-        return ability;
-    }
-
-    public UseCase getUseCase()
-    {
-        return useCase;
-    }
+    public abstract string Name { get; }
+    public abstract string Description { get; }
+    public abstract int EnergyCost { get; }
+    public abstract Ability Ability { get; }
+    public abstract UseCase UseCase { get; }
 
     public void UseAbility(Slot slot = null)
     {
-        if (useCase == UseCase.SLOT && slot != null)
+        if (UseCase == UseCase.SLOT && slot != null)
         {
-            ability.ActivateAbility();
+            Ability.ActivateAbility();
         }
-        else if (useCase == UseCase.PLAYER || useCase == UseCase.GLOBAL)
+        else if (UseCase == UseCase.PLAYER || UseCase == UseCase.GLOBAL)
         {
-            ability.ActivateAbility();
+            Ability.ActivateAbility();
         }
         else
         {

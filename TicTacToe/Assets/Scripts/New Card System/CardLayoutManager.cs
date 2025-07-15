@@ -3,13 +3,13 @@ using UnityEngine;
 
 public class CardLayoutManager : MonoBehaviour
 {
-    public List<CardVisual> cards = new List<CardVisual>();
-    public float spacing = 150f;       // Espaçamento horizontal entre cartas
-    public float curveHeight = 30f;    // Altura da curva (montanha)
-    public float selectRaise = 20f;    // Quanto a carta selecionada sobe no eixo Y
-    public float scaleAmount = 1.1f;   // Escala para seleção
+    public List<CardInteraction> cards = new List<CardInteraction>();
+    public float spacing = 150f;
+    public float curveHeight = 30f;
+    public float selectRaise = 20f;
+    public float scaleAmount = 1.1f;
 
-    private CardVisual selectedCard;
+    private CardInteraction selectedCard;
 
     void Start()
     {
@@ -20,7 +20,6 @@ public class CardLayoutManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            // Se clicou em algo que não é UI e há uma carta selecionada
             if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject() && selectedCard != null)
             {
                 DeselectCard();
@@ -37,21 +36,17 @@ public class CardLayoutManager : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            // Calcula posição x
             float xPos = (i - centerIndex) * spacing;
 
-            // Calcula y com curva parabólica (para formar a "montanha")
-            float normalizedX = (i - centerIndex) / centerIndex; // vai de -1 a 1
+            float normalizedX = (i - centerIndex) / centerIndex;
             float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
 
             Vector3 targetPos = new Vector3(xPos, yPos, 0);
             cards[i].transform.localPosition = targetPos;
 
-            // Reseta rotação e escala
             cards[i].transform.localRotation = Quaternion.identity;
             cards[i].transform.localScale = Vector3.one;
 
-            // Ajusta elevação e escala se for carta selecionada
             if (cards[i] == selectedCard)
             {
                 cards[i].transform.localPosition += Vector3.up * selectRaise;
@@ -60,16 +55,16 @@ public class CardLayoutManager : MonoBehaviour
         }
     }
 
-    public void SelectCard(CardVisual card)
+    public void SelectCard(CardInteraction card)
     {
-        if (!cards.Contains(card)) return; // evita selecionar carta que não está na lista
+        if (!cards.Contains(card)) return;
         if (selectedCard == card) return;
 
         if (selectedCard != null)
-            selectedCard.DeselectVisual();
+            selectedCard.cardVisual.DeselectVisual();
 
         selectedCard = card;
-        selectedCard.SelectVisual();
+        selectedCard.cardVisual.SelectVisual();
 
         LayoutCards();
     }
@@ -78,18 +73,16 @@ public class CardLayoutManager : MonoBehaviour
     {
         if (selectedCard != null)
         {
-            selectedCard.DeselectVisual();
+            selectedCard.cardVisual.DeselectVisual();
             selectedCard = null;
             LayoutCards();
         }
     }
 
-    public void ReorderCard(CardVisual draggedCard, float draggedX)
+    public void ReorderCard(CardInteraction draggedCard, float draggedX)
     {
-        // Remove o card temporariamente da lista
         cards.Remove(draggedCard);
 
-        // Encontra o índice mais próximo baseado no X
         int insertIndex = 0;
         for (int i = 0; i < cards.Count; i++)
         {
@@ -99,27 +92,23 @@ public class CardLayoutManager : MonoBehaviour
             }
         }
 
-        // Reinsere a carta na nova posição
         cards.Insert(insertIndex, draggedCard);
 
-        // Atualiza layout visual
         LayoutCards();
     }
 
-    public bool IsSelected(CardVisual card)
+    public bool IsSelected(CardInteraction card)
     {
         return selectedCard == card;
     }
 
-    public void SimulateDrag(CardVisual draggedCard, float draggedX)
+    public void SimulateDrag(CardInteraction draggedCard, float draggedX)
     {
         if (!cards.Contains(draggedCard)) return;
 
-        // Cria uma cópia da lista
-        List<CardVisual> simulated = new List<CardVisual>(cards);
+        List<CardInteraction> simulated = new List<CardInteraction>(cards);
         simulated.Remove(draggedCard);
 
-        // Encontra o índice ideal com base na posição X atual do drag
         int insertIndex = 0;
         for (int i = 0; i < simulated.Count; i++)
         {
@@ -131,7 +120,6 @@ public class CardLayoutManager : MonoBehaviour
 
         simulated.Insert(insertIndex, draggedCard);
 
-        // Posiciona visualmente a lista simulada
         float centerIndex = (simulated.Count - 1) / 2f;
 
         for (int i = 0; i < simulated.Count; i++)
@@ -143,7 +131,6 @@ public class CardLayoutManager : MonoBehaviour
 
             pos = new Vector3(xPos, yPos, 0);
 
-            // Não mover a carta que está sendo arrastada
             if (simulated[i] != draggedCard)
             {
                 simulated[i].transform.localPosition = pos;

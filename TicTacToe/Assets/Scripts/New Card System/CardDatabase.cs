@@ -7,7 +7,8 @@ public class CardDatabase : MonoBehaviour
     {
         return new List<Card>()
         {
-            new Card("GBase Attack!", "Example of effect here", 1, new DamageEffect(2), UseCase.SLOT)
+            new BasicDamageCard(),
+            //etc...
         };
     }
 

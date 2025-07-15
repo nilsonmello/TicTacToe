@@ -63,7 +63,7 @@ public class TableManager : MonoBehaviour
         if (!tableCreated) Debug.LogError("No Table, create it dumbass [EffectOnSlot]");
         // if (card.getUseCase() == UseCase.SLOT)
         // table.GetSlot(slotIndex).UseCard(card);
-        else Debug.LogWarning($"Can't use the Card [{card.getName()}] on Slots");
+        else Debug.LogWarning($"Can't use the Card [{card.Name}] on Slots");
     }
 
     public IGameResult CheckVictory()
