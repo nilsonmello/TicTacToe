@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class CardDatabase : MonoBehaviour
 {
+    //list containing all available cards in the game
     public static List<Card> GetAllCards()
     {
         return new List<Card>()
@@ -11,7 +12,10 @@ public class CardDatabase : MonoBehaviour
             //etc...
         };
     }
-
+    
+    /// <summary>
+    ///returns a random card from the database.
+    /// </summary>
     public static Card GetRandomCard()
     {
         var cards = GetAllCards();
