@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        Debug.Log($"Current Game State: {gameState}");
+        Debug.Log("Current Game State: " + gameState);
         switch (gameState)
         {
             case GameState.INITIALIZING:
@@ -74,9 +74,8 @@ public class GameManager : MonoBehaviour
                 gameState = GameState.PLAYING;
                 break;
             case GameState.CHANGING_TURN:
-            string winner = tableManager.CheckVictory().GetWinner()?.GetName();
+                string winner = tableManager.CheckVictory().GetWinner()?.GetName();
                 Debug.Log($"State: {gameState}, CurrentPlayer: {GetCurrentPlayer().GetName()}");
-                Debug.Log(winner);
                 if (winner != null)
                 {
                     gameState = GameState.GAME_OVER;
@@ -90,10 +89,17 @@ public class GameManager : MonoBehaviour
                 break;
             case GameState.GAME_OVER:
                 Debug.Log("Game Over! Resetting game state.");
-                // gameState = GameState.RESTARTING;
+                gameState = GameState.RESTARTING;
                 break;
             case GameState.RESTARTING:
-                gameState = GameState.INITIALIZING;
+                tableManager.DeleteTable();
+                gameState = GameState.WAITING_FOR_TABLE_DESTROY;
+                break;
+            case GameState.WAITING_FOR_TABLE_DESTROY:
+                if (tableManager.GetTable() == null)
+                {
+                    gameState = GameState.INITIALIZING;
+                }
                 break;
             default:
                 Debug.LogError("Unknown game state: " + gameState);

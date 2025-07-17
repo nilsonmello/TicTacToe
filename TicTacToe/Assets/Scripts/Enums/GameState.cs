@@ -5,5 +5,6 @@ public enum GameState
     CHANGING_TURN,
     PLAYING,
     GAME_OVER,
-    RESTARTING
+    RESTARTING,
+    WAITING_FOR_TABLE_DESTROY
 }

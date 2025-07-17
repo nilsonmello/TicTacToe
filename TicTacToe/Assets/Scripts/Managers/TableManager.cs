@@ -7,12 +7,16 @@ public class TableManager : MonoBehaviour
     private bool tableCreated = false;
     public GameObject tablePrefab;
 
+    [Header("Table Settings")]
     // There is no actual limit but 2 is the minimum
     [Range(2, 30)]
     public int xSize = 3; // Default grid size, can be changed in inspector
     [Range(2, 30)]
     public int ySize = 3; // Default grid size, can be changed in inspector
-    public float spacing = 1.1f; 
+    public float spacing = 1.1f;
+
+    public Quaternion rotation = Quaternion.identity;
+
     private Slot defaultSlot = new DefaultSlot();
     private List<System.Type> slotTypes = new List<System.Type> { typeof(ToxicSlot), typeof(BrightSlot) };
     public void Initialize()
@@ -21,12 +25,14 @@ public class TableManager : MonoBehaviour
     }
     public void CreateTable(List<System.Type> slotTypes, Slot defaultSlot, int xSize, int ySize, float spacing)
     {
-        if (tableCreated)
+        if (tableCreated || tableObject != null)
         {
             Debug.LogWarning("Tried creating Table but Table already created, try deleting it before creating.");
-        };
+            return;
+        }
         tableObject = GameObject.Instantiate(tablePrefab);
         tableObject.name = "GameTable";
+        tableObject.transform.rotation = rotation;
         table = tableObject.GetComponent<Table>();
         table.SetSlotQuantity(xSize, ySize);
         table.GenerateTable(slotTypes, defaultSlot);
@@ -44,12 +50,13 @@ public class TableManager : MonoBehaviour
     }
     public Table GetTable()
     {
-        if (!tableCreated) Debug.LogError("No Table, create it dumbass [GetTable]");
         return table;
     }
     public void DeleteTable()
     {
+        Debug.Log("Deleting Table", tableObject);
         Destroy(tableObject);
+        tableCreated = false;
     }
 
     public void TriggerSlotEffect(int slotIndex)

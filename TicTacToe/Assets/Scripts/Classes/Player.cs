@@ -5,6 +5,7 @@ public class Player
     private string playerName;
     private int HealthPoints = 30;
     private int EnergyPoints = 50;
+    private int maxEnergy = 50;
     private int playerID;
     private int playerScore;
     private Sprite playerIcon;
@@ -87,6 +88,18 @@ public class Player
     }
     public void AddEnergyPoints(int amount = 1)
     {
+        if (amount < 0)
+        {
+            Debug.LogWarning("Cannot add negative energy points.");
+            Debug.Log($"{playerName} gained no energy points. Total: {EnergyPoints}");
+            return;
+        }
+        if (EnergyPoints + amount > maxEnergy)
+        {
+            Debug.LogWarning($"Cannot exceed maximum energy points of {maxEnergy}.");
+            Debug.Log($"{playerName} gained no energy points. Total: {EnergyPoints}");
+            return;
+        }
         EnergyPoints += amount;
         Debug.Log($"{playerName} gained {amount} energy points. Total: {EnergyPoints}");
     }

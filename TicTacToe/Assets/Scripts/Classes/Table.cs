@@ -80,47 +80,68 @@ public class Table : MonoBehaviour
 
         GenerateTable(slotTypes, defaultSlot);
     }
-    public void GenerateGraphic(float spacing)
+    public void GenerateGraphic(float spacing, Transform parentTransform = null)
     {
-        this.spacing = spacing;
-        slotObjectGrid = new List<List<GameObject>>();
-        Transform parentTransform = this.transform;
-
-        float offsetX = (xSize - 1) * spacing * 0.5f;
-        float offsetY = (ySize - 1) * spacing * 0.5f;
-
-        for (int x = 0; x < xSize; x++)
+        if (slotsMatrix == null || slotsMatrix.Count == 0 || slotsMatrix[0].Count == 0)
         {
-            if (slotObjectGrid.Count <= x)
-                slotObjectGrid.Add(new List<GameObject>());
-            for (int y = 0; y < ySize; y++)
-            {
-                GameObject slotObj;
-                 Vector2 localPosition = new Vector2(x * spacing - offsetX, y * spacing - offsetY);
-                if (slotPool.Count > 0)
-                {
-                    slotObj = slotPool.Dequeue();
-                    slotObj.SetActive(true);
-                }
-                else
-                {
-                    slotObj = GameObject.Instantiate(
-                       slotPrefab,
-                       parentTransform.position + (Vector3)localPosition,
-                       Quaternion.identity,
-                       parentTransform
-                   );
-                }
-                slotObj.name = $"Slot_{x}_{y}";
-                slotObj.transform.localPosition = localPosition;
-                if (slotObj.TryGetComponent<SlotController>(out var controller))
-                    controller.SetSlot(slotsMatrix[x][y]);
-                else
-                    Debug.LogError("Slot prefab missing SlotController!");
+            Debug.LogError("Slots matrix is not initialized or empty, cannot generate graphic.");
+            return;
+        }
 
-                Vector2Int gridPos = new(x, y);
-                slotObjects[gridPos] = slotObj;
-                slotObjectGrid[x].Add(slotObj);
+        if (parentTransform == null)
+        {
+            Debug.LogWarning("Parent transform is not assigned or is null, using table transform.");
+            parentTransform = this.transform;
+        }
+
+        if (slotPrefab == null)
+        {
+            Debug.LogError("Slot prefab is not assigned, cannot generate graphic.");
+            return;
+        }
+
+        if (slotObjectGrid == null)
+            slotObjectGrid = new List<List<GameObject>>();
+        {
+            this.spacing = spacing;
+            slotObjectGrid = new List<List<GameObject>>();
+
+            float offsetX = (xSize - 1) * spacing * 0.5f;
+            float offsetY = (ySize - 1) * spacing * 0.5f;
+
+            for (int x = 0; x < xSize; x++)
+            {
+                if (slotObjectGrid.Count <= x)
+                    slotObjectGrid.Add(new List<GameObject>());
+                for (int y = 0; y < ySize; y++)
+                {
+                    GameObject slotObj;
+                    Vector2 localPosition = new Vector2(x * spacing - offsetX, y * spacing - offsetY);
+                    if (slotPool.Count > 0)
+                    {
+                        slotObj = slotPool.Dequeue();
+                        slotObj.SetActive(true);
+                    }
+                    else
+                    {
+                        slotObj = GameObject.Instantiate(
+                           slotPrefab,
+                           parentTransform.position + (Vector3)localPosition,
+                           parentTransform.rotation,
+                           parentTransform
+                       );
+                    }
+                    slotObj.name = $"Slot_{x}_{y}";
+                    slotObj.transform.localPosition = localPosition;
+                    if (slotObj.TryGetComponent<SlotController>(out var controller))
+                        controller.SetSlot(slotsMatrix[x][y]);
+                    else
+                        Debug.LogError("Slot prefab missing SlotController!");
+
+                    Vector2Int gridPos = new(x, y);
+                    slotObjects[gridPos] = slotObj;
+                    slotObjectGrid[x].Add(slotObj);
+                }
             }
         }
     }
