@@ -5,9 +5,8 @@ public class SpawnCards : MonoBehaviour
     [Header("Prefabs & References")]
     public GameObject cardPrefab;            //prefab of the card to instantiate
     public Transform cardParent;             //parent transform where cards will be instantiated under
-
     private CardLayoutManager layoutManager; //reference to the layout manager on cardParent
-
+    [SerializeField] private int cardTotal = 5;
     private void Start()
     {
         //try to get CardLayoutManager component from cardParent
@@ -18,8 +17,8 @@ public class SpawnCards : MonoBehaviour
             return;
         }
 
-        //spawn 5 random cards and add them to the layout manager
-        for (int i = 0; i < 5; i++)
+        //spawn random cards and add them to the layout manager
+        for (int i = 0; i < cardTotal; i++)
         {
             Card card = CardDatabase.GetRandomCard();
             if (card != null)

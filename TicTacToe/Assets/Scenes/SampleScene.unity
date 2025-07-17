@@ -564,8 +564,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -194}
-  m_SizeDelta: {x: -427.76, y: -440.89}
+  m_AnchoredPosition: {x: 0, y: -187.09}
+  m_SizeDelta: {x: -427.76, y: -427.08}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1458284776
 MonoBehaviour:
@@ -619,6 +619,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 3250115172970382227, guid: fd336be2ab334b4439f9fc6a91b6f642, type: 3}
   cardParent: {fileID: 1458284775}
+  cardTotal: 9
 --- !u!114 &1458284780
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -635,7 +636,6 @@ MonoBehaviour:
   spacing: 60
   curveHeight: 0
   selectRaise: 40
-  scaleAmount: 1.1
 --- !u!1 &1519675767
 GameObject:
   m_ObjectHideFlags: 0

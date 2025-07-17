@@ -333,6 +333,8 @@ MonoBehaviour:
   cardVisual: {fileID: 4155905195023966123}
   moveSpeed: 1700
   followSmoothTime: 0.1
+  rotationMultiplier: 0.2
+  rotationReturnSpeed: 10
 --- !u!1 &4475367159548101438
 GameObject:
   m_ObjectHideFlags: 0
@@ -554,6 +556,20 @@ MonoBehaviour:
   costText: {fileID: 6168962813186252781}
   moveDuration: 0.75
   allowPositionInterpolation: 1
+  scaleTarget: {fileID: 1997074663293517616}
+  hoverScale: 1.05
+  hoverDuration: 0.15
+  hoverShakeDuration: 0.25
+  hoverShakeStrength: 10
+  hoverShakeVibrato: 10
+  hoverShakeRandomness: 90
+  punchDuration: 0.2
+  punchStrength: 50
+  punchVibrato: 10
+  punchElasticity: 1
+  dragScale: 1.2
+  dragScaleDuration: 0.2
+  maxRotationZ: 10
 --- !u!222 &3369483956066967229
 CanvasRenderer:
   m_ObjectHideFlags: 0

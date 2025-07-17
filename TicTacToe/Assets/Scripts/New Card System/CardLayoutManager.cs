@@ -13,13 +13,12 @@ public class CardLayoutManager : MonoBehaviour
 
     private void Start()
     {
-        //initial layout of cards on start
-        LayoutCards();
+        LayoutCards();                      //initial layout of cards on start
     }
 
     private void Update()
     {
-        //deselect card if user clicks outside any UI element and a card is selected
+        //deselect card if clicked outside UI and a card is selected
         if (Input.GetMouseButtonDown(0))
         {
             if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject() && selectedCard != null)
@@ -29,48 +28,38 @@ public class CardLayoutManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    ///positions all cards in a curved layout, applying selected card raise and sorting order
-    /// </summary>
     public void LayoutCards()
     {
         int count = cards.Count;
         if (count == 0) return;
 
-        float centerIndex = (count - 1) / 2f;
+        float centerIndex = (count - 1) / 2f;  //calculate center index for spacing
 
         for (int i = 0; i < count; i++)
         {
-            float xPos = (i - centerIndex) * spacing;
-            float normalizedX = (i - centerIndex) / centerIndex;
-            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
+            float xPos = (i - centerIndex) * spacing;  //horizontal position based on index
+            float normalizedX = (i - centerIndex) / centerIndex;  //normalized horizontal position
+            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;  //curve height based on normalized x
 
             Vector3 targetPos = new Vector3(xPos, yPos, 0);
 
             if (cards[i] == selectedCard)
             {
-                targetPos += Vector3.up * selectRaise;
+                targetPos += Vector3.up * selectRaise;  //raise selected card up visually
             }
 
-            //move card smoothly to target position
-            cards[i].MoveToLocalPosition(targetPos);
-            cards[i].transform.localRotation = Quaternion.identity;
+            cards[i].MoveToLocalPosition(targetPos);  //move card smoothly to target position
 
-            //set base sorting order according to card index (leftmost lowest)
-            cards[i].SetOriginalSortingOrder(i);
-            cards[i].SetSortingOrder(i);
+            cards[i].SetOriginalSortingOrder(i);     //store original sorting order
+            cards[i].SetSortingOrder(i);             //set sorting order to maintain proper draw order
         }
 
-        //bring selected card to the front visually by setting high sorting order
         if (selectedCard != null)
         {
-            selectedCard.SetSortingOrder(1000);
+            selectedCard.SetSortingOrder(1000);     //bring selected card visually on top
         }
     }
 
-    /// <summary>
-    ///select a card and update layout
-    /// </summary>
     public void SelectCard(CardInteraction card)
     {
         if (!cards.Contains(card)) return;
@@ -78,89 +67,81 @@ public class CardLayoutManager : MonoBehaviour
 
         if (selectedCard != null)
         {
-            selectedCard.RestoreOriginalSortingOrder();
+            selectedCard.cardVisual.DeselectVisual();      //update visuals of previously selected card
+            selectedCard.RestoreOriginalSortingOrder();   //restore sorting order of previously selected card
         }
 
         selectedCard = card;
-        LayoutCards();
+        selectedCard.cardVisual.SelectVisual();            //update visuals of newly selected card
+        LayoutCards();                                      //relayout all cards to reflect selection
     }
 
-    /// <summary>
-    ///deselect currently selected card and update layout
-    /// </summary>
     public void DeselectCard()
     {
         if (selectedCard != null)
         {
-            selectedCard.RestoreOriginalSortingOrder();
+            selectedCard.cardVisual.DeselectVisual();      //update visuals on deselect
+            selectedCard.RestoreOriginalSortingOrder();   //restore original sorting order
             selectedCard = null;
-            LayoutCards();
+            LayoutCards();                                 //relayout cards after deselection
         }
     }
 
-    /// <summary>
-    ///reorders the dragged card within the list based on its horizontal dragged position
-    /// </summary>
     public void ReorderCard(CardInteraction draggedCard, float draggedX)
     {
-        cards.Remove(draggedCard);
+        cards.Remove(draggedCard);  //temporarily remove dragged card from list
 
         int insertIndex = 0;
         for (int i = 0; i < cards.Count; i++)
         {
             if (draggedX > cards[i].transform.localPosition.x)
             {
-                insertIndex = i + 1;
+                insertIndex = i + 1;  //determine new insert index based on dragged x position
             }
         }
 
-        cards.Insert(insertIndex, draggedCard);
-        LayoutCards();
+        cards.Insert(insertIndex, draggedCard);  //insert dragged card back into list at new position
+        LayoutCards();                           //relayout cards to update positions
     }
 
-    /// <summary>
-    ///check if a card is currently selected
-    /// </summary>
     public bool IsSelected(CardInteraction card)
     {
-        return selectedCard == card;
+        return selectedCard == card;             //check if given card is currently selected
     }
 
-    /// <summary>
-    ///simulates the layout while dragging a card, updating positions of other cards smoothly
-    /// </summary>
     public void SimulateDrag(CardInteraction draggedCard, float draggedX)
     {
         if (!cards.Contains(draggedCard)) return;
 
+        draggedCard.SetSortingOrder(1000);      //bring dragged card visually on top
+
         List<CardInteraction> simulated = new List<CardInteraction>(cards);
-        simulated.Remove(draggedCard);
+        simulated.Remove(draggedCard);           //remove dragged card from simulation list
 
         int insertIndex = 0;
         for (int i = 0; i < simulated.Count; i++)
         {
             if (draggedX > simulated[i].transform.localPosition.x)
             {
-                insertIndex = i + 1;
+                insertIndex = i + 1;             //find insertion index based on dragged x position
             }
         }
 
-        simulated.Insert(insertIndex, draggedCard);
+        simulated.Insert(insertIndex, draggedCard);  //insert dragged card into simulated list
 
         float centerIndex = (simulated.Count - 1) / 2f;
 
         for (int i = 0; i < simulated.Count; i++)
         {
-            float xPos = (i - centerIndex) * spacing;
-            float normalizedX = (i - centerIndex) / centerIndex;
-            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
+            float xPos = (i - centerIndex) * spacing;          //calculate horizontal position
+            float normalizedX = (i - centerIndex) / centerIndex;  //normalized position for curve
+            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;  //curve height
 
             Vector3 pos = new Vector3(xPos, yPos, 0);
 
-            if (simulated[i] == draggedCard) continue;
+            if (simulated[i] == draggedCard) continue;         //skip moving dragged card here
 
-            simulated[i].MoveToLocalPosition(pos);
-            simulated[i].transform.localRotation = Quaternion.identity;
+            simulated[i].MoveToLocalPosition(pos);              //move other cards smoothly to their positions
         }
     }
 }

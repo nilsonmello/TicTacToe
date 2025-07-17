@@ -5,71 +5,83 @@ using System.Collections;
 public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [Header("References")]
-    private Canvas canvas;
-    private CanvasGroup canvasGroup;           //controls raycast blocking during drag
-    private RectTransform rectTransform;       //cached RectTransform
-    private Transform originalParent;          //where the card returns after dragging
+    private Canvas canvas;                      //canvas reference for drag parenting
+    private CanvasGroup canvasGroup;            //canvasGroup for blocking raycasts during drag
+    private RectTransform rectTransform;        //rectTransform of the card
+    private Transform originalParent;           //original parent to restore after drag
 
-    public CardVisual cardVisual;              //visual component of the card
-    private CardLayoutManager layoutManager;   //reference to layout manager controlling positioning
+    public CardVisual cardVisual;               //reference to CardVisual component
+    private CardLayoutManager layoutManager;   //reference to layout manager handling cards
 
     [Header("Smooth Movement")]
-    private Coroutine moveCoroutine;           //coroutine for smooth movement
-    public float moveSpeed = 1000f;            //speed of card movement when repositioning
+    private Coroutine moveCoroutine;            //coroutine for smooth move
+    public float moveSpeed = 1000f;             //speed of smooth move
 
     [Header("Drag Control")]
-    private Vector3 targetDragPosition;        // target position during drag
-    private Vector3 velocity = Vector3.zero;   //velocity reference for SmoothDamp
-    public float followSmoothTime = 0.05f;     //smoothDamp time for following the mouse
-    private bool isDragging = false;           //whether the card is being dragged
+    private Vector3 targetDragPosition;         //target position during drag
+    private Vector3 velocity = Vector3.zero;    //velocity used in SmoothDamp
+    public float followSmoothTime = 0.05f;      //smooth time for follow movement
+    private bool isDragging = false;             //flag if card is being dragged
+
+    [Header("Rotation Control")]
+    public float rotationMultiplier = 0.1f;     //multiplier for rotation based on drag delta
+    public float rotationReturnSpeed = 10f;     //speed to return rotation to original
+    private Quaternion originalRotation;        //original rotation to reset after drag
 
     [Header("Sorting Order")]
-    private Canvas cardCanvas;                 //canvas used to control sorting order
-    private int originalSortingOrder;          //default sorting order to return to
+    private Canvas cardCanvas;                   //canvas for sorting order control
+    private int originalSortingOrder;            //store original sorting order
 
     private void Awake()
     {
-        //cache references
-        rectTransform = GetComponent<RectTransform>();
-        canvasGroup = GetComponent<CanvasGroup>();
-        canvas = GetComponentInParent<Canvas>();
-        layoutManager = GetComponentInParent<CardLayoutManager>();
+        rectTransform = GetComponent<RectTransform>(); //get rectTransform
+        canvasGroup = GetComponent<CanvasGroup>();     //get or add canvasGroup
+        canvas = GetComponentInParent<Canvas>();        //get parent canvas
+        layoutManager = GetComponentInParent<CardLayoutManager>(); //get parent layout manager
 
-        //add CanvasGroup if missing
         if (canvasGroup == null)
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-        //ensure card has its own Canvas for sorting control
-        cardCanvas = GetComponent<Canvas>();
+        cardCanvas = GetComponent<Canvas>();             //get or add canvas for sorting
         if (cardCanvas == null)
         {
             cardCanvas = gameObject.AddComponent<Canvas>();
             cardCanvas.overrideSorting = true;
         }
 
-        //save the initial sorting order
-        originalSortingOrder = cardCanvas.sortingOrder;
+        originalSortingOrder = cardCanvas.sortingOrder;  //store original sorting order
+        originalRotation = transform.localRotation;      //store original rotation
     }
 
     private void Update()
     {
-        //smoothly follow target position during drag
         if (isDragging)
         {
+            //smoothly move towards target drag position
             transform.localPosition = Vector3.SmoothDamp(
                 transform.localPosition,
                 targetDragPosition,
                 ref velocity,
                 followSmoothTime
             );
+
+            //rotation during drag based on horizontal delta
+            float angle = (targetDragPosition.x - transform.localPosition.x) * rotationMultiplier;
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, Time.deltaTime * 10f);
+        }
+        else
+        {
+            //smoothly return rotation to original
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, originalRotation, Time.deltaTime * rotationReturnSpeed);
         }
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        //select or deselect the card on click
         if (layoutManager != null)
         {
+            //toggle selection on click
             if (layoutManager.IsSelected(this))
                 layoutManager.DeselectCard();
             else
@@ -79,16 +91,17 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        //begin dragging: move to root canvas, disable raycasts
-        originalParent = transform.parent;
-        canvasGroup.blocksRaycasts = false;
-        transform.SetParent(canvas.transform, true);
+        originalParent = transform.parent;    //store original parent
+        canvasGroup.blocksRaycasts = false;   //disable blocking raycasts to allow drop
+        transform.SetParent(canvas.transform, true); //move to top-level canvas for dragging
         isDragging = true;
+
+        cardVisual?.OnBeginDragVisual();      //notify visual about drag start
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        //update target drag position and simulate layout reordering
+        //convert screen point to local point in canvas
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvas.transform as RectTransform,
             eventData.position,
@@ -96,22 +109,30 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             out Vector2 pos
         );
 
-        targetDragPosition = pos;
-        layoutManager.SimulateDrag(this, targetDragPosition.x);
+        targetDragPosition = pos;              //set target drag position
+        layoutManager?.SimulateDrag(this, targetDragPosition.x); //simulate drag effect on layout
+        cardVisual?.OnBeginDragVisual();      //notify visual about ongoing drag
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        //return card to layout, re-enable raycasts
-        canvasGroup.blocksRaycasts = true;
-        transform.SetParent(originalParent, true);
+        canvasGroup.blocksRaycasts = true;    //enable raycasts again
+        transform.SetParent(originalParent, true); //restore original parent
+
+        //apply slight rotation on release based on last delta
+        float angle = (targetDragPosition.x - transform.localPosition.x) * rotationMultiplier * 1.5f;
+        transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+
         isDragging = false;
-        layoutManager.ReorderCard(this, transform.localPosition.x);
+        layoutManager?.ReorderCard(this, transform.localPosition.x); //reorder cards in layout
+        cardVisual?.OnEndDragVisual();           //notify visual about drag end
+
+        targetDragPosition = transform.localPosition; //reset target position
     }
 
     public void MoveToLocalPosition(Vector3 targetPos)
     {
-        //move smoothly to a local position
+        //start smooth move coroutine to target position
         if (moveCoroutine != null)
             StopCoroutine(moveCoroutine);
         moveCoroutine = StartCoroutine(MoveRoutine(targetPos));
@@ -119,7 +140,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void SetLocalPositionInstant(Vector3 pos)
     {
-        //instantly move to position, cancelling movement coroutine
+        //stop movement coroutine and set position instantly
         if (moveCoroutine != null)
             StopCoroutine(moveCoroutine);
         transform.localPosition = pos;
@@ -127,31 +148,48 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     private IEnumerator MoveRoutine(Vector3 endPos)
     {
-        //smoothly move the card to the target position
         while (Vector3.Distance(transform.localPosition, endPos) > 0.01f)
         {
+            //move towards target position
+            Vector3 direction = endPos - transform.localPosition;
             transform.localPosition = Vector3.MoveTowards(transform.localPosition, endPos, moveSpeed * Time.deltaTime);
+
+            //apply rotation based on movement direction
+            float angleZ = Mathf.Clamp((endPos.x - transform.localPosition.x) * rotationMultiplier * 15f, -20f, 20f);
+            Quaternion targetRotation = Quaternion.Euler(0, 0, angleZ);
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, Time.deltaTime * 8f);
+
             yield return null;
         }
+
+        //snap to final position
         transform.localPosition = endPos;
+
+        //smoothly return to original rotation
+        float t = 0f;
+        while (Quaternion.Angle(transform.localRotation, originalRotation) > 0.5f)
+        {
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, originalRotation, t);
+            t += Time.deltaTime * 4f;
+            yield return null;
+        }
+
+        transform.localRotation = originalRotation;
         moveCoroutine = null;
     }
 
     public void SetSortingOrder(int order)
     {
-        //set the current sorting order of the card
-        cardCanvas.sortingOrder = order;
+        cardCanvas.sortingOrder = order;   //set sorting order of the card canvas
     }
 
     public void RestoreOriginalSortingOrder()
     {
-        //restore the original sorting order saved at startup
-        cardCanvas.sortingOrder = originalSortingOrder;
+        cardCanvas.sortingOrder = originalSortingOrder; //restore to original sorting order
     }
 
     public void SetOriginalSortingOrder(int order)
     {
-        //override the original sorting order manually
-        originalSortingOrder = order;
+        originalSortingOrder = order;     //set the stored original sorting order
     }
 }
