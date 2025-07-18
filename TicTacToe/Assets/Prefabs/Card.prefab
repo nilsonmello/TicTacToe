@@ -567,7 +567,7 @@ MonoBehaviour:
   punchStrength: 50
   punchVibrato: 10
   punchElasticity: 1
-  dragScale: 1.2
+  dragScale: 1.5
   dragScaleDuration: 0.2
   maxRotationZ: 10
 --- !u!222 &3369483956066967229

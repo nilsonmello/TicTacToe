@@ -513,6 +513,7 @@ MonoBehaviour:
   xSize: 3
   ySize: 3
   spacing: 1.1
+  rotation: {x: 0, y: 0, z: 0, w: 1}
 --- !u!4 &747811874
 Transform:
   m_ObjectHideFlags: 0
@@ -632,9 +633,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42784ee245370d14bad6768f86814282, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cards: []
-  spacing: 60
-  curveHeight: 0
+  cards:
+  - {fileID: 0}
+  spacing: 70
+  curveHeight: 30
   selectRaise: 40
 --- !u!1 &1519675767
 GameObject:
