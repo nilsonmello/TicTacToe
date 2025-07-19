@@ -4,36 +4,34 @@ using System.Collections;
 
 public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [Header("References")]
-    private Canvas canvas;
-    private CanvasGroup canvasGroup;
-    private RectTransform rectTransform;
-    private Transform originalParent;
+    [Header("references")]
+    private Canvas canvas;                          //canvas reference
+    private CanvasGroup canvasGroup;                //canvas group for raycast control
+    private RectTransform rectTransform;            //rect transform for positioning
+    private Transform originalParent;               //original parent before drag
+    public CardVisual cardVisual;                   //reference to card visual
+    private CardLayoutManager layoutManager;        //reference to layout manager
 
-    public CardVisual cardVisual;
-    private CardLayoutManager layoutManager;
+    [Header("smooth movement")]
+    private Coroutine moveCoroutine;                //movement coroutine reference
+    public float moveSpeed = 1000f;                 //speed for tween movement
 
-    [Header("Smooth Movement")]
-    private Coroutine moveCoroutine;
-    public float moveSpeed = 1000f;
+    [Header("drag control")]
+    private Vector3 targetDragPosition;             //target position during drag
+    private Vector3 velocity = Vector3.zero;        //velocity for smooth damp
+    public float followSmoothTime = 0.05f;          //smooth follow time
+    private bool isDragging = false;                //dragging state flag
+    private Vector3 dragOffset;                     //offset from mouse during drag
 
-    [Header("Drag Control")]
-    private Vector3 targetDragPosition;
-    private Vector3 velocity = Vector3.zero;
-    public float followSmoothTime = 0.05f;
-    private bool isDragging = false;
+    [Header("rotation control")]
+    public float rotationMultiplier = 0.1f;         //multiplier for tilt based on drag
+    public float rotationReturnSpeed = 10f;         //speed to return to original rotation
+    private Quaternion originalRotation;            //original local rotation of card
 
-    private Vector3 dragOffset;
-
-    [Header("Rotation Control")]
-    public float rotationMultiplier = 0.1f;
-    public float rotationReturnSpeed = 10f;
-    private Quaternion originalRotation;
-
-    [Header("Sorting Order")]
-    private Canvas cardCanvas;
-    private int originalSortingOrder;
-    public bool IsDragging => isDragging;
+    [Header("sorting order")]
+    private Canvas cardCanvas;                      //canvas to override sorting
+    private int originalSortingOrder;               //original sorting order
+    public bool IsDragging => isDragging;           //property to expose dragging status
 
     private void Awake()
     {
@@ -60,6 +58,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     {
         if (isDragging)
         {
+            //move toward drag position
             transform.localPosition = Vector3.SmoothDamp(
                 transform.localPosition,
                 targetDragPosition,
@@ -67,19 +66,41 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
                 followSmoothTime
             );
 
-            float angle = (targetDragPosition.x - transform.localPosition.x) * rotationMultiplier;
-            Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
-            transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, Time.deltaTime * 10f);
+            //update rotation based on drag delta
+            float horizontalDelta = targetDragPosition.x - transform.localPosition.x;
+            UpdateRotation(horizontalDelta, 10f);
         }
         else
         {
-            transform.localRotation = Quaternion.Slerp(transform.localRotation, originalRotation, Time.deltaTime * rotationReturnSpeed);
+            //return to original rotation when not dragging
+            ReturnToOriginalRotation();
         }
+    }
+
+    //update rotation using drag delta
+    private void UpdateRotation(float horizontalDelta, float lerpSpeed)
+    {
+        float angle = horizontalDelta * rotationMultiplier;
+        Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
+        transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, Time.deltaTime * lerpSpeed);
+    }
+
+    //return to original rotation
+    private void ReturnToOriginalRotation()
+    {
+        transform.localRotation = Quaternion.Slerp(transform.localRotation, originalRotation, Time.deltaTime * rotationReturnSpeed);
+    }
+
+    //set rotation instantly (used after drag)
+    private void SetRotationInstant(float horizontalDelta, float multiplier)
+    {
+        float angle = horizontalDelta * multiplier;
+        transform.localRotation = Quaternion.Euler(0f, 0f, angle);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (isDragging) return; // Evita seleção enquanto arrasta
+        if (isDragging) return;
 
         if (layoutManager != null)
         {
@@ -93,13 +114,10 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (layoutManager != null)
-        {
-            layoutManager.DeselectAllExcept(null); // Limpa qualquer seleção
-        }
+            layoutManager.DeselectAllExcept(null);
 
         cardVisual?.KillAllTweens();
 
-        // Para a coroutine de movimento suave para evitar conflito com o drag
         if (moveCoroutine != null)
         {
             StopCoroutine(moveCoroutine);
@@ -132,6 +150,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         isDragging = true;
 
         cardVisual?.OnBeginDragVisual();
+        cardVisual.enabled = false;
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -155,19 +174,19 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         canvasGroup.blocksRaycasts = true;
         transform.SetParent(originalParent, true);
 
-        float angle = (targetDragPosition.x - transform.localPosition.x) * rotationMultiplier * 1.5f;
-        transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+        float horizontalDelta = targetDragPosition.x - transform.localPosition.x;
+        SetRotationInstant(horizontalDelta, rotationMultiplier * 1.5f);
 
         isDragging = false;
         layoutManager?.ReorderCard(this, transform.localPosition.x);
         cardVisual?.OnEndDragVisual();
 
         targetDragPosition = transform.localPosition;
+        cardVisual.enabled = true;
     }
 
     public void MoveToLocalPosition(Vector3 targetPos)
     {
-        // Não tenta mover suavemente se estiver arrastando para não conflitar com drag no Update
         if (isDragging) return;
 
         if (moveCoroutine != null)
@@ -188,8 +207,9 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         {
             transform.localPosition = Vector3.MoveTowards(transform.localPosition, endPos, moveSpeed * Time.deltaTime);
 
-            float angleZ = Mathf.Clamp((endPos.x - transform.localPosition.x) * rotationMultiplier * 15f, -20f, 20f);
-            Quaternion targetRotation = Quaternion.Euler(0, 0, angleZ);
+            float horizontalDelta = endPos.x - transform.localPosition.x;
+            float clampedAngle = Mathf.Clamp(horizontalDelta * rotationMultiplier * 15f, -20f, 20f);
+            Quaternion targetRotation = Quaternion.Euler(0, 0, clampedAngle);
             transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, Time.deltaTime * 8f);
 
             yield return null;

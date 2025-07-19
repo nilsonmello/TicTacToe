@@ -26,6 +26,9 @@ public class SpawnCards : MonoBehaviour
                 //instantiate card prefab as child of cardParent
                 GameObject go = Instantiate(cardPrefab, cardParent);
 
+                //set the name of the game object to the card name
+                go.name = card.Name;
+
                 //get CardInteraction component to setup card visuals and logic
                 CardInteraction interaction = go.GetComponent<CardInteraction>();
 
@@ -33,9 +36,10 @@ public class SpawnCards : MonoBehaviour
                 CardVisual visual = go.GetComponentInChildren<CardVisual>();
                 interaction.cardVisual = visual;
 
+                //setup the card visuals with the card data
                 visual.Setup(card);
 
-                //add card to layout manager list
+                //add the card interaction to the layout manager's list
                 layoutManager.cards.Add(interaction);
             }
         }
@@ -44,3 +48,6 @@ public class SpawnCards : MonoBehaviour
         layoutManager.LayoutCards();
     }
 }
+
+
+

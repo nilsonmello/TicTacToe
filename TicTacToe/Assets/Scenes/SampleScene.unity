@@ -620,7 +620,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 3250115172970382227, guid: fd336be2ab334b4439f9fc6a91b6f642, type: 3}
   cardParent: {fileID: 1458284775}
-  cardTotal: 9
+  cardTotal: 5
 --- !u!114 &1458284780
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -633,8 +633,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42784ee245370d14bad6768f86814282, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cards:
-  - {fileID: 0}
+  cards: []
   spacing: 70
   curveHeight: 30
   selectRaise: 40

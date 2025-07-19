@@ -3,22 +3,21 @@ using UnityEngine;
 
 public class CardLayoutManager : MonoBehaviour
 {
-    [Header("Card Layout Settings")]
+    [Header("card layout settings")]
     public List<CardInteraction> cards = new List<CardInteraction>(); //list of managed cards
-    public float spacing = 150f; //horizontal spacing between cards
-    public float curveHeight = 30f; //height of curved layout
-    public float selectRaise = 20f; //vertical offset for selected card
-
-    private CardInteraction selectedCard; //currently selected card
+    public float spacing = 150f;                                     //horizontal spacing between cards
+    public float curveHeight = 30f;                                  //height of curved layout
+    public float selectRaise = 20f;                                  //vertical offset for selected card
+    private CardInteraction selectedCard;                            //currently selected card
 
     private void Start()
     {
-        LayoutCards(); //initial layout setup
+        LayoutCards();                                               //initial layout setup
     }
 
     private void Update()
     {
-        //deselect card if clicking outside UI
+        //deselect card if clicking outside ui
         if (Input.GetMouseButtonDown(0))
         {
             if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject() && selectedCard != null)
@@ -28,9 +27,10 @@ public class CardLayoutManager : MonoBehaviour
         }
     }
 
+    //layout all cards in curve with spacing, adjusting for selection
     public void LayoutCards()
     {
-        cards.RemoveAll(card => card == null); //clean null entries
+        cards.RemoveAll(card => card == null);                      //remove null cards
 
         int count = cards.Count;
         if (count == 0) return;
@@ -40,7 +40,7 @@ public class CardLayoutManager : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             if (cards[i].IsDragging)
-                continue; //skip dragging card
+                continue;                                           //skip dragging card
 
             float xPos = (i - centerIndex) * spacing;
             float normalizedX = (i - centerIndex) / centerIndex;
@@ -49,9 +49,7 @@ public class CardLayoutManager : MonoBehaviour
             Vector3 targetPos = new Vector3(xPos, yPos, 0);
 
             if (cards[i] == selectedCard)
-            {
                 targetPos += Vector3.up * selectRaise;
-            }
 
             cards[i].MoveToLocalPosition(targetPos);
             cards[i].SetOriginalSortingOrder(i);
@@ -60,11 +58,10 @@ public class CardLayoutManager : MonoBehaviour
 
         //bring selected card to front
         if (selectedCard != null && !selectedCard.IsDragging)
-        {
             selectedCard.SetSortingOrder(1000);
-        }
     }
 
+    //select a card, deselect previous if any
     public void SelectCard(CardInteraction card)
     {
         if (!cards.Contains(card)) return;
@@ -78,20 +75,22 @@ public class CardLayoutManager : MonoBehaviour
 
         selectedCard = card;
         selectedCard.cardVisual.SelectVisual();
-        LayoutCards(); //recalculate layout with new selection
+        LayoutCards();                                             //update layout with selection
     }
 
+    //deselect current selected card
     public void DeselectCard()
     {
         if (selectedCard == null) return;
 
-        Debug.Log($"Deselecting card: {selectedCard.name}");
+        Debug.Log($"deselecting card: {selectedCard.name}");
         selectedCard.cardVisual.DeselectVisual();
         selectedCard.RestoreOriginalSortingOrder();
         selectedCard = null;
-        LayoutCards(); //recalculate layout with no selection
+        LayoutCards();                                             //update layout without selection
     }
 
+    //reorder card in list based on dragged x position
     public void ReorderCard(CardInteraction draggedCard, float draggedX)
     {
         cards.Remove(draggedCard);
@@ -100,25 +99,25 @@ public class CardLayoutManager : MonoBehaviour
         for (int i = 0; i < cards.Count; i++)
         {
             if (draggedX > cards[i].transform.localPosition.x)
-            {
                 insertIndex = i + 1;
-            }
         }
 
         cards.Insert(insertIndex, draggedCard);
-        LayoutCards(); //recalculate layout after reorder
+        LayoutCards();                                             //update layout after reorder
     }
 
+    //check if card is selected
     public bool IsSelected(CardInteraction card)
     {
         return selectedCard == card;
     }
 
+    //simulate drag layout without changing actual list order
     public void SimulateDrag(CardInteraction draggedCard, float draggedX)
     {
         if (!cards.Contains(draggedCard)) return;
 
-        draggedCard.SetSortingOrder(1000); //bring to front during drag
+        draggedCard.SetSortingOrder(1000);                         //bring dragged card to front
 
         List<CardInteraction> simulated = new List<CardInteraction>(cards);
         simulated.Remove(draggedCard);
@@ -127,9 +126,7 @@ public class CardLayoutManager : MonoBehaviour
         for (int i = 0; i < simulated.Count; i++)
         {
             if (draggedX > simulated[i].transform.localPosition.x)
-            {
                 insertIndex = i + 1;
-            }
         }
 
         simulated.Insert(insertIndex, draggedCard);
@@ -150,11 +147,10 @@ public class CardLayoutManager : MonoBehaviour
         }
     }
 
+    //deselect selected card unless it is exceptCard
     public void DeselectAllExcept(CardInteraction exceptCard)
     {
         if (selectedCard != null && selectedCard != exceptCard)
-        {
             DeselectCard();
-        }
     }
 }

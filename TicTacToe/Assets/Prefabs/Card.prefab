@@ -331,10 +331,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardVisual: {fileID: 4155905195023966123}
-  moveSpeed: 1700
+  moveSpeed: 1000
   followSmoothTime: 0.1
   rotationMultiplier: 0.2
-  rotationReturnSpeed: 10
+  rotationReturnSpeed: 5
 --- !u!1 &4475367159548101438
 GameObject:
   m_ObjectHideFlags: 0
@@ -567,9 +567,13 @@ MonoBehaviour:
   punchStrength: 50
   punchVibrato: 10
   punchElasticity: 1
-  dragScale: 1.5
-  dragScaleDuration: 0.2
+  dragScale: 1.3
+  dragScaleDuration: 0.8
   maxRotationZ: 10
+  hoverTiltAmount: 60
+  tiltLerpSpeed: 8
+  idleTiltSpeed: 2
+  idleTiltMagnitude: 5
 --- !u!222 &3369483956066967229
 CanvasRenderer:
   m_ObjectHideFlags: 0
