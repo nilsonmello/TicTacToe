@@ -565,8 +565,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -187.09}
-  m_SizeDelta: {x: -427.76, y: -427.08}
+  m_AnchoredPosition: {x: 0, y: -184}
+  m_SizeDelta: {x: -427.76, y: -487.17}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1458284776
 MonoBehaviour:
@@ -620,7 +620,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 3250115172970382227, guid: fd336be2ab334b4439f9fc6a91b6f642, type: 3}
   cardParent: {fileID: 1458284775}
-  cardTotal: 5
+  cardTotal: 10
 --- !u!114 &1458284780
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -633,8 +633,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42784ee245370d14bad6768f86814282, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cards: []
-  spacing: 70
+  cards:
+  - {fileID: 0}
+  - {fileID: 0}
+  spacing: 60
   curveHeight: 30
   selectRaise: 40
 --- !u!1 &1519675767

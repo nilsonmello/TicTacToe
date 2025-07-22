@@ -155,14 +155,22 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnDrag(PointerEventData eventData)
     {
+Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : Camera.main;
+
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
             canvas.transform as RectTransform,
             eventData.position,
-            eventData.pressEventCamera,
+            cam,
             out Vector3 worldMousePos))
         {
             Vector3 targetWorldPos = worldMousePos + dragOffset;
+
+            // Este cálculo funciona bem mesmo com câmera perspective
             targetDragPosition = canvas.transform.InverseTransformPoint(targetWorldPos);
+        }
+        else
+        {
+            Debug.LogWarning("Couldn't convert screen to world position.");
         }
 
         layoutManager?.SimulateDrag(this, targetDragPosition.x);

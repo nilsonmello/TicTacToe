@@ -202,17 +202,21 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         KillAllTweens();
     }
 
-    //handles tilt rotation logic
     private void HandleRotationEffect()
     {
         if (isDraggingVisual) return;
 
         if ((isHovered && !IsSelected()) || (IsSelected() && isHovered))
         {
-            Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mouseWorld.z = 0;
+            Camera cam = Camera.main;
+            Vector3 screenPos = Input.mousePosition;
 
+            float zDepth = Vector3.Distance(cam.transform.position, transform.position);
+            screenPos.z = zDepth;
+
+            Vector3 mouseWorld = cam.ScreenToWorldPoint(screenPos);
             Vector3 offset = mouseWorld - transform.position;
+
             float tiltX = Mathf.Clamp(offset.y * -hoverTiltAmount, -10f, 10f);
             float tiltY = Mathf.Clamp(offset.x * hoverTiltAmount, -10f, 10f);
 
