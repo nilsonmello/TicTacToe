@@ -47,7 +47,23 @@ public class SpawnCards : MonoBehaviour
         //arrange cards in layout after spawning
         layoutManager.LayoutCards();
     }
+
+    // Method to spawn a single card and add it to the layout manager
+    public void SpawnSingleCard()
+    {
+        Card card = CardDatabase.GetRandomCard();
+        if (card != null)
+        {
+            GameObject go = Instantiate(cardPrefab, cardParent);
+            go.name = card.Name;
+
+            CardInteraction interaction = go.GetComponent<CardInteraction>();
+            CardVisual visual = go.GetComponentInChildren<CardVisual>();
+            interaction.cardVisual = visual;
+            visual.Setup(card);
+
+            layoutManager.cards.Add(interaction);
+            layoutManager.LayoutCards();
+        }
+    }
 }
-
-
-

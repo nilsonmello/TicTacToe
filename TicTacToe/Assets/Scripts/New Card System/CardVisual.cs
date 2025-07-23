@@ -102,7 +102,7 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
         positionTarget = newPosition;
         moveTween?.Kill();
-        
+
         moveTween = transform.DOLocalMove(positionTarget, moveDuration)
             .SetEase(Ease.OutCubic)
             .OnComplete(() => positionTarget = transform.localPosition);
@@ -146,7 +146,7 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         {
             KillScaleAndShakeTweens();
             scaleTween = scaleTarget.DOScale(1f, hoverDuration).SetEase(Ease.OutSine);
-            transform.localPosition = positionTarget;
+            AnimateMoveToLocalPosition(positionTarget);
         }
     }
 
@@ -159,7 +159,7 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     }
 
     //on dragging (unused)
-    public void OnDragVisual() {}
+    public void OnDragVisual() { }
 
     //end dragging
     public void OnEndDragVisual()
@@ -229,5 +229,12 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             Quaternion targetRot = Quaternion.Euler(0f, 0f, angleZ);
             transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, Time.deltaTime * tiltLerpSpeed);
         }
+    }
+    
+    public void AnimateMoveToLocalPosition(Vector3 targetPosition)
+    {
+        moveTween?.Kill();
+        positionTarget = targetPosition;
+        moveTween = transform.DOLocalMove(targetPosition, 0.3f).SetEase(Ease.OutCubic);
     }
 }

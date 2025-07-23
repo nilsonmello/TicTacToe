@@ -30,19 +30,23 @@ public class CardLayoutManager : MonoBehaviour
     //layout all cards in curve with spacing, adjusting for selection
     public void LayoutCards()
     {
-        cards.RemoveAll(card => card == null);                      //remove null cards
+        cards.RemoveAll(card => card == null); // remove null cards
 
         int count = cards.Count;
         if (count == 0) return;
+
+        float minSpacing = -50f;
+        float maxSpacing = spacing;
+        float dynamicSpacing = Mathf.Clamp(maxSpacing - (count * 5f), minSpacing, maxSpacing);
 
         float centerIndex = (count - 1) / 2f;
 
         for (int i = 0; i < count; i++)
         {
             if (cards[i].IsDragging)
-                continue;                                           //skip dragging card
+                continue;
 
-            float xPos = (i - centerIndex) * spacing;
+            float xPos = (i - centerIndex) * dynamicSpacing;
             float normalizedX = (i - centerIndex) / centerIndex;
             float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
 
@@ -56,7 +60,6 @@ public class CardLayoutManager : MonoBehaviour
             cards[i].SetSortingOrder(i);
         }
 
-        //bring selected card to front
         if (selectedCard != null && !selectedCard.IsDragging)
             selectedCard.SetSortingOrder(1000);
     }
@@ -75,7 +78,7 @@ public class CardLayoutManager : MonoBehaviour
 
         selectedCard = card;
         selectedCard.cardVisual.SelectVisual();
-        LayoutCards();                                             //update layout with selection
+        LayoutCards();                 //update layout with selection
     }
 
     //deselect current selected card
@@ -87,7 +90,7 @@ public class CardLayoutManager : MonoBehaviour
         selectedCard.cardVisual.DeselectVisual();
         selectedCard.RestoreOriginalSortingOrder();
         selectedCard = null;
-        LayoutCards();                                             //update layout without selection
+        LayoutCards();                  //update layout without selection
     }
 
     //reorder card in list based on dragged x position
@@ -103,7 +106,7 @@ public class CardLayoutManager : MonoBehaviour
         }
 
         cards.Insert(insertIndex, draggedCard);
-        LayoutCards();                                             //update layout after reorder
+        LayoutCards();             //update layout after reorder
     }
 
     //check if card is selected
@@ -117,7 +120,7 @@ public class CardLayoutManager : MonoBehaviour
     {
         if (!cards.Contains(draggedCard)) return;
 
-        draggedCard.SetSortingOrder(1000);                         //bring dragged card to front
+        draggedCard.SetSortingOrder(1000);  // bring dragged card to front
 
         List<CardInteraction> simulated = new List<CardInteraction>(cards);
         simulated.Remove(draggedCard);
@@ -131,11 +134,16 @@ public class CardLayoutManager : MonoBehaviour
 
         simulated.Insert(insertIndex, draggedCard);
 
-        float centerIndex = (simulated.Count - 1) / 2f;
+        int count = simulated.Count;
+        float minSpacing = 80f;
+        float maxSpacing = spacing;
+        float dynamicSpacing = Mathf.Clamp(maxSpacing - (count * 5f), minSpacing, maxSpacing);
 
-        for (int i = 0; i < simulated.Count; i++)
+        float centerIndex = (count - 1) / 2f;
+
+        for (int i = 0; i < count; i++)
         {
-            float xPos = (i - centerIndex) * spacing;
+            float xPos = (i - centerIndex) * dynamicSpacing;
             float normalizedX = (i - centerIndex) / centerIndex;
             float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
 
@@ -152,5 +160,24 @@ public class CardLayoutManager : MonoBehaviour
     {
         if (selectedCard != null && selectedCard != exceptCard)
             DeselectCard();
+    }
+
+    //destroy a random card and remove it from layout
+    public void RemoveRandomCard()
+    {
+        if (cards.Count == 0) return;
+
+        int randomIndex = Random.Range(0, cards.Count);
+        CardInteraction cardToRemove = cards[randomIndex];
+
+        if (cardToRemove == selectedCard)
+        {
+            selectedCard = null;
+        }
+
+        cards.RemoveAt(randomIndex);
+        Destroy(cardToRemove.gameObject);
+
+        LayoutCards();
     }
 }

@@ -165,7 +165,6 @@ Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : C
         {
             Vector3 targetWorldPos = worldMousePos + dragOffset;
 
-            // Este cálculo funciona bem mesmo com câmera perspective
             targetDragPosition = canvas.transform.InverseTransformPoint(targetWorldPos);
         }
         else
