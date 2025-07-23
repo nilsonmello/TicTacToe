@@ -41,11 +41,12 @@ public class CardLayoutManager : MonoBehaviour
 
         float centerIndex = (count - 1) / 2f;
 
+        //if selected card is null, use first card as default
         for (int i = 0; i < count; i++)
         {
             if (cards[i].IsDragging)
                 continue;
-
+            //calculate position based on index and dynamic spacing
             float xPos = (i - centerIndex) * dynamicSpacing;
             float normalizedX = (i - centerIndex) / centerIndex;
             float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;

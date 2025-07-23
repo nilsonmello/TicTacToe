@@ -529,7 +529,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -971617577, guid: 2ad97f260c984e146b39a0625cc2249d, type: 3}
+  m_Sprite: {fileID: 3663885233409546887, guid: 608b6a8c2e2008b46a02e296c332011b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -574,6 +574,7 @@ MonoBehaviour:
   tiltLerpSpeed: 8
   idleTiltSpeed: 2
   idleTiltMagnitude: 5
+  artworkImage: {fileID: 3709683177190684794}
 --- !u!222 &3369483956066967229
 CanvasRenderer:
   m_ObjectHideFlags: 0

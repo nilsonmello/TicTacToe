@@ -48,7 +48,7 @@ public class SpawnCards : MonoBehaviour
         layoutManager.LayoutCards();
     }
 
-    // Method to spawn a single card and add it to the layout manager
+    //method to spawn a single card and add it to the layout manager
     public void SpawnSingleCard()
     {
         Card card = CardDatabase.GetRandomCard();

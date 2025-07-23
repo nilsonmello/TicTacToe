@@ -9,6 +9,7 @@ public class CardDatabase : MonoBehaviour
         return new List<Card>()
         {
             new BasicDamageCard(),
+            new BasicSuportCard(),
             //etc...
         };
     }

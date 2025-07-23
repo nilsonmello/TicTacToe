@@ -47,16 +47,17 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     private bool isDraggingVisual = false; //flag to block hover scale while dragging
 
     [Header("Hover Rotation Settings")]
-    public float hoverTiltAmount = 5f;
-    public float tiltLerpSpeed = 8f;
-    public float idleTiltSpeed = 2f;
-    public float idleTiltMagnitude = 2f;
-    private bool isHovered = false;
-    private int savedIndex;
+    public float hoverTiltAmount = 5f; //amount of tilt when hovered
+    public float tiltLerpSpeed = 8f; //speed of tilt lerp
+    public float idleTiltSpeed = 2f; //speed of idle tilt
+    public float idleTiltMagnitude = 2f; //magnitude of idle tilt
+    private bool isHovered = false; //flag to check if card is hovered
+    private int savedIndex; //random index for idle tilt effect
 
     [Header("Interaction References")]
-    private CardInteraction cachedInteraction;
-    private CardLayoutManager cachedLayout;
+    private CardInteraction cachedInteraction; //cached reference to CardInteraction component
+    private CardLayoutManager cachedLayout; //cached reference to CardLayoutManager component
+    public UnityEngine.UI.Image artworkImage; //reference to card artwork image
 
     private void Awake()
     {
@@ -87,6 +88,11 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         nameText.text = card.Name;
         descriptionText.text = card.Description;
         costText.text = card.EnergyCost.ToString();
+
+        if (artworkImage != null && card.Artwork != null)
+        {
+            artworkImage.sprite = card.Artwork;
+        }
     }
 
     //move card to a new local position with tween
@@ -202,6 +208,8 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         KillAllTweens();
     }
 
+    //handle rotation effect based on hover state
+    //this method applies a tilt effect when hovered or selected
     private void HandleRotationEffect()
     {
         if (isDraggingVisual) return;
@@ -231,6 +239,8 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         }
     }
     
+    //animate move to a new local position
+    //this method uses a tween to smoothly move the card to the target position
     public void AnimateMoveToLocalPosition(Vector3 targetPosition)
     {
         moveTween?.Kill();

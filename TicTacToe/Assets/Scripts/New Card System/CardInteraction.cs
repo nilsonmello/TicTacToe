@@ -98,6 +98,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         transform.localRotation = Quaternion.Euler(0f, 0f, angle);
     }
 
+    //handle pointer click to select/deselect card
     public void OnPointerClick(PointerEventData eventData)
     {
         if (isDragging) return;
@@ -111,6 +112,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
     }
 
+    //handle begin drag event
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (layoutManager != null)
@@ -153,9 +155,10 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         cardVisual.enabled = false;
     }
 
+    //handle dragging event
     public void OnDrag(PointerEventData eventData)
     {
-Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : Camera.main;
+        Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : Camera.main;
 
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
             canvas.transform as RectTransform,
@@ -176,6 +179,7 @@ Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : C
         cardVisual?.OnDragVisual();
     }
 
+    //handle end drag event
     public void OnEndDrag(PointerEventData eventData)
     {
         canvasGroup.blocksRaycasts = true;
@@ -192,6 +196,8 @@ Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : C
         cardVisual.enabled = true;
     }
 
+    //move card to a specific local position
+    //this method is used to move the card smoothly to a target position
     public void MoveToLocalPosition(Vector3 targetPos)
     {
         if (isDragging) return;
@@ -201,6 +207,8 @@ Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : C
         moveCoroutine = StartCoroutine(MoveRoutine(targetPos));
     }
 
+    //set card to a specific local position instantly
+    //this method is used to set the card's position without tweening
     public void SetLocalPositionInstant(Vector3 pos)
     {
         if (moveCoroutine != null)
@@ -208,6 +216,7 @@ Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : C
         transform.localPosition = pos;
     }
 
+    //set card to a specific local rotation instantly
     private IEnumerator MoveRoutine(Vector3 endPos)
     {
         while (Vector3.Distance(transform.localPosition, endPos) > 0.01f)
@@ -236,16 +245,19 @@ Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : C
         moveCoroutine = null;
     }
 
+    //set the sorting order of the card
     public void SetSortingOrder(int order)
     {
         cardCanvas.sortingOrder = order;
     }
 
+    //restore the original sorting order of the card
     public void RestoreOriginalSortingOrder()
     {
         cardCanvas.sortingOrder = originalSortingOrder;
     }
 
+    //get the original sorting order of the card
     public void SetOriginalSortingOrder(int order)
     {
         originalSortingOrder = order;
