@@ -97,17 +97,26 @@ public class CardLayoutManager : MonoBehaviour
     //reorder card in list based on dragged x position
     public void ReorderCard(CardInteraction draggedCard, float draggedX)
     {
+        if (!cards.Contains(draggedCard))
+            return;
+
         cards.Remove(draggedCard);
 
+        float reorderThreshold = 40f;
         int insertIndex = 0;
+
         for (int i = 0; i < cards.Count; i++)
         {
-            if (draggedX > cards[i].transform.localPosition.x)
+            float cardX = cards[i].transform.localPosition.x;
+
+            if (draggedX - cardX > reorderThreshold)
+            {
                 insertIndex = i + 1;
+            }
         }
 
         cards.Insert(insertIndex, draggedCard);
-        LayoutCards();             //update layout after reorder
+        LayoutCards();
     }
 
     //check if card is selected

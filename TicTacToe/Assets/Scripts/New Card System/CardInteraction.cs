@@ -38,6 +38,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     private void Awake()
     {
+        //cache components and setup canvas
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         canvas = GetComponentInParent<Canvas>();
@@ -64,6 +65,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         if (isDragging)
         {
+            //smooth follow mouse
             transform.localPosition = Vector3.SmoothDamp(
                 transform.localPosition,
                 targetDragPosition,
@@ -71,12 +73,14 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
                 followSmoothTime
             );
 
+            //apply rotation based on drag delta
             float horizontalDelta = targetDragPosition.x - transform.localPosition.x;
             float angle = Mathf.Clamp(horizontalDelta * rotationMultiplier * 50f, -80f, 80f);
             UpdateRotation(horizontalDelta, 10f);
         }
         else
         {
+            //calculate return rotation when not dragging
             Vector3 currentPosition = transform.localPosition;
             float deltaX = currentPosition.x - lastPosition.x;
 
@@ -95,15 +99,22 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void MoveToLocalPosition(Vector3 targetPos)
     {
+        //initiate smooth move to target slot
         if (isDragging || isMoving) return;
 
         if (moveCoroutine != null)
+        {
             StopCoroutine(moveCoroutine);
+            moveCoroutine = null;
+        }
+
+        isMoving = false;
         moveCoroutine = StartCoroutine(MoveRoutine(targetPos));
     }
 
     private IEnumerator MoveRoutine(Vector3 endPos)
     {
+        //interpolated move and rotation toward target
         isMoving = true;
 
         Vector3 startPos = transform.localPosition;
@@ -131,6 +142,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         transform.localPosition = endPos;
 
+        //smooth return to original rotation
         float rotT = 0f;
         while (Quaternion.Angle(transform.localRotation, originalRotation) > 0.5f)
         {
@@ -146,6 +158,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     private void UpdateRotation(float horizontalDelta, float lerpSpeed)
     {
+        //rotate card visual with smooth angle based on delta
         float angle = horizontalDelta * rotationMultiplier;
         Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
 
@@ -157,7 +170,8 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (isDragging) return;
+        //select or deselect card on click
+        if (isDragging || isMoving) return;
 
         if (layoutManager != null)
         {
@@ -170,6 +184,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        //begin dragging and detach from layout
         if (layoutManager != null)
             layoutManager.DeselectAllExcept(null);
 
@@ -180,6 +195,8 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             StopCoroutine(moveCoroutine);
             moveCoroutine = null;
         }
+
+        isMoving = false;
 
         if (cardVisual != null)
         {
@@ -212,6 +229,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnDrag(PointerEventData eventData)
     {
+        //update target drag position and simulate layout
         Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : Camera.main;
 
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
@@ -234,36 +252,49 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        //end drag and return to layout
         canvasGroup.blocksRaycasts = true;
         transform.SetParent(originalParent, true);
 
         isDragging = false;
+        isMoving = false;
+
         layoutManager?.ReorderCard(this, transform.localPosition.x);
         cardVisual?.OnEndDragVisual();
 
         targetDragPosition = transform.localPosition;
+        transform.localRotation = originalRotation;
         cardVisual.enabled = true;
     }
 
     public void SetLocalPositionInstant(Vector3 pos)
     {
+        //teleport card instantly to position
         if (moveCoroutine != null)
+        {
             StopCoroutine(moveCoroutine);
+            moveCoroutine = null;
+        }
+
+        isMoving = false;
         transform.localPosition = pos;
     }
 
     public void SetSortingOrder(int order)
     {
+        //set sorting order manually
         cardCanvas.sortingOrder = order;
     }
 
     public void RestoreOriginalSortingOrder()
     {
+        //reset to original sorting order
         cardCanvas.sortingOrder = originalSortingOrder;
     }
 
     public void SetOriginalSortingOrder(int order)
     {
+        //update internal sorting order reference
         originalSortingOrder = order;
     }
 }
