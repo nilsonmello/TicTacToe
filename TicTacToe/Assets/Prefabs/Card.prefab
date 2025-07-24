@@ -559,13 +559,13 @@ MonoBehaviour:
   scaleTarget: {fileID: 1997074663293517616}
   hoverScale: 1.05
   hoverDuration: 0.15
-  hoverShakeDuration: 0.25
-  hoverShakeStrength: 10
-  hoverShakeVibrato: 10
-  hoverShakeRandomness: 90
+  hoverShakeDuration: 0.1
+  hoverShakeStrength: 20
+  hoverShakeVibrato: 20
+  hoverShakeRandomness: 70
   punchDuration: 0.2
-  punchStrength: 50
-  punchVibrato: 10
+  punchStrength: 30
+  punchVibrato: 20
   punchElasticity: 1
   dragScale: 1.3
   dragScaleDuration: 0.8

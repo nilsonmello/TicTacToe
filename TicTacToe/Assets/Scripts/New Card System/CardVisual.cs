@@ -126,7 +126,7 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public void DeselectVisual()
     {
         KillAllTweens();
-        punchTween = transform.DOPunchPosition(Vector3.down * (punchStrength / 2f), punchDuration * 0.7f, punchVibrato, punchElasticity);
+        punchTween = transform.DOPunchPosition(Vector3.up * punchStrength, punchDuration, punchVibrato, punchElasticity);
         scaleTween = scaleTarget.DOScale(1f, 0.2f).SetEase(Ease.InOutSine);
     }
 
