@@ -24,7 +24,7 @@ public class CardVisual : MonoBehaviour
     public Canvas cardCanvas;
     private int originalSortingOrder;
 
-    [Header("Balatro Hover Rotation")]
+    [Header("Hover rotation")]
     [SerializeField] private float hoverZAmplitude = 5f;
     [SerializeField] private float hoverZSpeed = 3f;
     [SerializeField] private int savedIndex = 0;
@@ -43,76 +43,77 @@ public class CardVisual : MonoBehaviour
     {
         cardCanvas = GetComponent<Canvas>();
         if (cardCanvas != null)
-            cardCanvas.overrideSorting = true;
+            cardCanvas.overrideSorting = true; //enable override sorting for this canvas
 
-        targetRotation = transform.rotation;
+        targetRotation = transform.rotation; //store initial rotation
     }
 
     public void SetCard(Card card)
     {
         if (card == null || artworkImage == null) return;
 
-        artworkImage.sprite = card.Artwork;
+        artworkImage.sprite = card.Artwork; //set artwork sprite from card data
     }
 
     public void SetHoverState(bool isOver)
     {
-        isHovered = isOver;
+        isHovered = isOver; //update hover state
         if (!isOver)
-            hoverMousePosition = Vector2.zero;
+            hoverMousePosition = Vector2.zero; //reset hover mouse position when not hovering
     }
 
     public void SetSelectedState(bool selected)
     {
-        isSelected = selected;
+        isSelected = selected; //update selected state
         if (selected == false)
         {
-            isHovered = false;
+            isHovered = false; //clear hover when deselected
             hoverMousePosition = Vector2.zero;
         }
     }
 
     public void UpdateHoverMousePosition(Vector2 normalizedLocalPos)
     {
-        hoverMousePosition = normalizedLocalPos;
+        hoverMousePosition = normalizedLocalPos; //update hover position for rotation effect
         isHovered = true;
     }
 
     public void SetFollowTarget(Transform t)
     {
-        target = t;
-        lastPosition = t.position;
+        target = t; //assign the transform to follow
+        lastPosition = t.position; //initialize last position for velocity calc
     }
 
     private void Update()
     {
-        if (target == null) return;
+        if (target == null) return; //exit if no target assigned
 
         Vector3 targetPos = target.position + positionOffset;
-        transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * 20f);
+        transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * 20f); //smooth follow position
 
-        Vector3 movement = (target.position - lastPosition) / Time.deltaTime;
-        smoothedVelocity = Vector3.Lerp(smoothedVelocity, movement, Time.deltaTime * 10f);
+        Vector3 movement = (target.position - lastPosition) / Time.deltaTime; //calculate movement velocity
+        smoothedVelocity = Vector3.Lerp(smoothedVelocity, movement, Time.deltaTime * 10f); //smooth velocity
         lastPosition = target.position;
 
-        float tiltX = Mathf.Clamp(-smoothedVelocity.y * 0.1f, -10f, 10f);
-        float tiltY = Mathf.Clamp(smoothedVelocity.x * 0.1f, -10f, 10f);
-        float tiltZ = Mathf.Clamp(-smoothedVelocity.x * 0.2f, -15f, 15f);
+        //apply rotation based on smoothed movement velocity with multiplier for x tilt
+        float tiltX = Mathf.Clamp(-smoothedVelocity.y * 0.5f, -maxTiltX, maxTiltX);
+        float tiltY = Mathf.Clamp(smoothedVelocity.x * 0.1f, -maxTiltX, maxTiltX);
+        float tiltZ = Mathf.Clamp(-smoothedVelocity.x * 0.2f, -maxTiltZ, maxTiltZ);
 
         float extraX = 0f;
         float extraZ = 0f;
 
         if (isHovered)
         {
-            (extraX, extraZ) = GetHoverRotationOffsets();
+            (extraX, extraZ) = GetHoverRotationOffsets(); //get extra rotation from hover position
         }
         else
         {
-            (extraX, extraZ) = GetIdleRotationOffsets();
+            (extraX, extraZ) = GetIdleRotationOffsets(); //get idle rotation offsets for subtle movement
         }
 
-        targetRotation = Quaternion.Euler(tiltX + extraX, tiltY, tiltZ + extraZ);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSmoothSpeed);
+        targetRotation = Quaternion.Euler(tiltX + extraX, tiltY, tiltZ + extraZ); //combine rotations
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSmoothSpeed); //smoothly interpolate rotation
     }
 
     public (float extraX, float extraZ) GetHoverRotationOffsets()
@@ -120,86 +121,85 @@ public class CardVisual : MonoBehaviour
         float normX = Mathf.Clamp(hoverMousePosition.x, -0.5f, 0.5f) * 2f;
         float normY = Mathf.Clamp(hoverMousePosition.y, -0.5f, 0.5f) * 2f;
 
-        float extraZ = -normX * maxTiltZ;
-        float extraX = normY * maxTiltX;
+        float extraZ = -normX * maxTiltZ; //tilt around z axis based on mouse x pos
+        float extraX = normY * maxTiltX;  //tilt around x axis based on mouse y pos
 
         return (extraX, extraZ);
     }
 
     public (float extraX, float extraZ) GetIdleRotationOffsets()
     {
-        idleVirtualMousePos.x = Mathf.Sin(Time.time * idleOscillationSpeed) * idleOscillationAmplitude;
-        idleVirtualMousePos.y = Mathf.Cos(Time.time * idleOscillationSpeed * 0.7f) * idleOscillationAmplitude;
+        idleVirtualMousePos.x = Mathf.Sin(Time.time * idleOscillationSpeed) * idleOscillationAmplitude; //idle oscillation x
+        idleVirtualMousePos.y = Mathf.Cos(Time.time * idleOscillationSpeed * 0.7f) * idleOscillationAmplitude; //idle oscillation y
 
         float normX = Mathf.Clamp(idleVirtualMousePos.x, -0.5f, 0.5f) * 2f;
         float normY = Mathf.Clamp(idleVirtualMousePos.y, -0.5f, 0.5f) * 2f;
 
-        float extraZ = -normX * maxTiltZ;
-        float extraX = normY * maxTiltX;
+        float extraZ = -normX * maxTiltZ; //idle tilt z
+        float extraX = normY * maxTiltX;  //idle tilt x
 
         return (extraX, extraZ);
     }
 
     public void SetOriginalSortingOrder(int order)
     {
-        originalSortingOrder = order;
+        originalSortingOrder = order; //store original sorting order
         if (cardCanvas != null)
-            cardCanvas.sortingOrder = order;
+            cardCanvas.sortingOrder = order; //apply sorting order to canvas
     }
 
     public void ResetSortingOrder(int newOrder)
     {
-        originalSortingOrder = newOrder;
+        originalSortingOrder = newOrder; //update original sorting order
         if (cardCanvas != null)
-            cardCanvas.sortingOrder = originalSortingOrder;
+            cardCanvas.sortingOrder = originalSortingOrder; //reset canvas sorting order
     }
 
     public void SetSortingOrder(int order)
     {
-        originalSortingOrder = order;
+        originalSortingOrder = order; //set sorting order explicitly
         if (cardCanvas != null)
-            cardCanvas.sortingOrder = order;
+            cardCanvas.sortingOrder = order; //apply sorting order
     }
 
     public void ReturnSortingLayer()
     {
-        cardCanvas.sortingOrder = originalSortingOrder;
+        cardCanvas.sortingOrder = originalSortingOrder; //restore original sorting order
     }
 
     public void PlayPoniterEnter()
     {
-        transform.DOKill();
+        transform.DOKill(); //kill any running tweens
         transform.localScale = Vector3.one;
-        transform.DOScale(1.1f, 0.3f).SetEase(Ease.OutBack);
-        transform.DOShakePosition(0.1f, 10f, 20, 0);
+        transform.DOScale(1.1f, 0.3f).SetEase(Ease.OutBack); //scale up on pointer enter
+        transform.DOShakePosition(0.1f, 10f, 20, 0); //shake effect
     }
 
     public void PlayPointerExit()
     {
-        transform.DOKill();
-        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOKill(); //kill tweens on exit
+        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack); //scale back to normal
     }
 
     public void SelectVisual()
     {
-        transform.DOScale(1.3f, 0.3f).SetEase(Ease.OutBack);
-        transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand);
+        transform.DOScale(1.3f, 0.3f).SetEase(Ease.OutBack); //scale up on select
+        transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand); //shake effect on select
     }
 
     public void DeselectVisual()
     {
-        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
-        transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand);
+        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack); //scale back on deselect
+        transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand); //shake effect on deselect
     }
 
     public void IndragTweens()
     {
-        transform.DOScale(1.5f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOScale(1.3f, 0.3f).SetEase(Ease.OutBack); //scale up while dragging
     }
 
     public void OffDragTweens()
     {
-        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack); //scale back when drag ends
     }
-
 }

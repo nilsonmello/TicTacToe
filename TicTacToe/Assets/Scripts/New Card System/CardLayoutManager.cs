@@ -4,72 +4,73 @@ using UnityEngine;
 public class CardLayoutManager : MonoBehaviour
 {
     [Header("Cards and list panels")]
-    public List<CardInteraction> cards = new List<CardInteraction>();
-    public static List<CardLayoutManager> AllPanels = new List<CardLayoutManager>();
+    public List<CardInteraction> cards = new List<CardInteraction>(); //list of cards in this panel
+    public static List<CardLayoutManager> AllPanels = new List<CardLayoutManager>(); //static list of all panels
 
     [Header("Layout Settings")]
-    public float dynamicSpacing = 150f;
-    public float curveHeight = 100f;
-    public float selectRaise = 40f;
-    private CardInteraction selectedCard;
+    public float dynamicSpacing = 150f; //horizontal spacing between cards
+    public float curveHeight = 100f; //height of curve for card layout
+    public float selectRaise = 40f; //vertical raise of selected card
+    private CardInteraction selectedCard; //currently selected card
 
     [Header("Panel Type")]
-    public CardPanel panelData;
+    public CardPanel panelData; //panel metadata or behavior
 
     private void OnEnable()
     {
         if (!AllPanels.Contains(this))
-            AllPanels.Add(this);
+            AllPanels.Add(this); //add this panel to global list on enable
     }
 
     private void OnDisable()
     {
         if (AllPanels.Contains(this))
-            AllPanels.Remove(this);
+            AllPanels.Remove(this); //remove this panel from global list on disable
     }
 
     public void LayoutCards()
     {
         int count = cards.Count;
-        if (count == 0) return;
+        if (count == 0) return; //skip if no cards
 
-        float centerIndex = (count - 1) / 2f;
+        float centerIndex = (count - 1) / 2f; //calculate center index for symmetrical layout
 
         for (int i = 0; i < count; i++)
         {
             var card = cards[i];
 
             if (card.IsDragging)
-                continue;
+                continue; //skip cards currently being dragged
 
-            float xPos = (i - centerIndex) * dynamicSpacing;
-            float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f;
-            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
+            float xPos = (i - centerIndex) * dynamicSpacing; //calculate x position based on index
+            float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f; //normalize position between -1 and 1
+            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight; //calculate y position on curve
             Vector3 targetPos = new Vector3(xPos, yPos, 0);
 
             if (card == selectedCard)
-                targetPos += Vector3.up * selectRaise;
+                targetPos += Vector3.up * selectRaise; //raise selected card
 
-            card.MoveToLocalPosition(targetPos);
+            card.MoveToLocalPosition(targetPos); //move card smoothly to target position
 
             if (card != selectedCard && card.cardVisualInstance != null)
             {
-                card.cardVisualInstance.SetSortingOrder(count - i);
+                card.cardVisualInstance.SetSortingOrder(count - i); //set sorting order for layering cards visually
             }
         }
     }
 
     public void SimulateDrag(CardInteraction draggedCard, float dragX)
     {
-        if (!cards.Contains(draggedCard)) return;
+        if (!cards.Contains(draggedCard)) return; //ignore if card not in this panel
 
         List<CardInteraction> tempList = new List<CardInteraction>(cards);
-        tempList.Remove(draggedCard);
+        tempList.Remove(draggedCard); //temporarily remove dragged card
 
         float centerIndex = (tempList.Count) / 2f;
         int newIndex = 0;
         float closestDist = float.MaxValue;
 
+        //find closest slot based on dragX position
         for (int i = 0; i <= tempList.Count; i++)
         {
             float xPos = (i - centerIndex) * dynamicSpacing;
@@ -82,25 +83,25 @@ public class CardLayoutManager : MonoBehaviour
         }
 
         newIndex = Mathf.Clamp(newIndex, 0, tempList.Count);
-        tempList.Insert(newIndex, draggedCard);
+        tempList.Insert(newIndex, draggedCard); //insert dragged card at closest slot
 
-        ApplyLayoutFromList(tempList, draggedCard);
+        ApplyLayoutFromList(tempList, draggedCard); //apply layout to all cards except dragged
     }
 
     public void ReorderCard(CardInteraction card)
     {
-        if (!cards.Contains(card)) return;
+        if (!cards.Contains(card)) return; //ignore if card not in list
 
         List<CardInteraction> tempList = new List<CardInteraction>(cards);
-        tempList.Remove(card);
+        tempList.Remove(card); //remove card temporarily
 
-        float localPosX = transform.InverseTransformPoint(card.transform.position).x;
+        float localPosX = transform.InverseTransformPoint(card.transform.position).x; //get local x position of card
 
         float centerIndex = (tempList.Count) / 2f;
-
         int newIndex = 0;
         float closestDist = float.MaxValue;
 
+        //find closest index based on card position
         for (int i = 0; i <= tempList.Count; i++)
         {
             float xPos = (i - centerIndex) * dynamicSpacing;
@@ -113,38 +114,38 @@ public class CardLayoutManager : MonoBehaviour
         }
 
         newIndex = Mathf.Clamp(newIndex, 0, tempList.Count);
-        tempList.Insert(newIndex, card);
+        tempList.Insert(newIndex, card); //insert card back at new position
 
-        cards = tempList;
-        ApplyLayoutFromList(cards);
+        cards = tempList; //update cards list
+        ApplyLayoutFromList(cards); //apply layout
     }
 
     public bool IsSelected(CardInteraction card)
     {
-        return selectedCard == card;
+        return selectedCard == card; //check if card is currently selected
     }
 
     public void SelectCard(CardInteraction card)
     {
         if (selectedCard == card)
-            return;
+            return; //ignore if already selected
 
         if (selectedCard != null && selectedCard.cardVisualInstance != null)
         {
             int order = cards.IndexOf(selectedCard);
-            selectedCard.cardVisualInstance.ResetSortingOrder(order);
-            selectedCard.cardVisualInstance.DeselectVisual();
-            selectedCard.cardVisualInstance.SetHoverState(false);
+            selectedCard.cardVisualInstance.ResetSortingOrder(order); //reset sorting of old selected card
+            selectedCard.cardVisualInstance.DeselectVisual(); //play deselect animation
+            selectedCard.cardVisualInstance.SetHoverState(false); //clear hover state
         }
 
-        selectedCard = card;
+        selectedCard = card; //set new selected card
 
         if (selectedCard != null && selectedCard.cardVisualInstance != null)
         {
-            selectedCard.cardVisualInstance.SelectVisual();
+            selectedCard.cardVisualInstance.SelectVisual(); //play select animation
         }
 
-        LayoutCards();
+        LayoutCards(); //update layout with selection changes
     }
 
     public void DeselectCard()
@@ -152,33 +153,33 @@ public class CardLayoutManager : MonoBehaviour
         if (selectedCard != null && selectedCard.cardVisualInstance != null)
         {
             int order = cards.IndexOf(selectedCard);
-            selectedCard.cardVisualInstance.ResetSortingOrder(order);
-            selectedCard.cardVisualInstance.DeselectVisual();
+            selectedCard.cardVisualInstance.ResetSortingOrder(order); //reset sorting order
+            selectedCard.cardVisualInstance.DeselectVisual(); //play deselect animation
         }
 
-        selectedCard = null;
-        LayoutCards();
+        selectedCard = null; //clear selected card
+        LayoutCards(); //update layout
     }
 
     public void DeselectAllExcept(CardInteraction exceptCard)
     {
         if (selectedCard != null && selectedCard != exceptCard && selectedCard.cardVisualInstance != null)
         {
-            selectedCard.cardVisualInstance.DeselectVisual();
-            selectedCard.cardVisualInstance.SetSelectedState(false);
-            selectedCard.cardVisualInstance.ReturnSortingLayer();
+            selectedCard.cardVisualInstance.DeselectVisual(); //deselect current card visually
+            selectedCard.cardVisualInstance.SetSelectedState(false); //update selection state
+            selectedCard.cardVisualInstance.ReturnSortingLayer(); //return sorting to original
         }
 
         if (exceptCard == null || selectedCard != exceptCard)
-            selectedCard = null;
+            selectedCard = null; //clear selection if different from exceptCard
 
-        LayoutCards();
+        LayoutCards(); //update layout
     }
 
     private void OnDrawGizmos()
     {
         if (cards == null || cards.Count == 0)
-            return;
+            return; //skip if no cards
 
         float centerIndex = (cards.Count - 1) / 2f;
 
@@ -209,7 +210,7 @@ public class CardLayoutManager : MonoBehaviour
                 Vector3 cardWorldPos = card.transform.position;
                 Vector3 slotWorldPos = transform.TransformPoint(slotLocalPos);
 
-                Debug.DrawLine(cardWorldPos, slotWorldPos, Color.green);
+                Debug.DrawLine(cardWorldPos, slotWorldPos, Color.green); //draw line from dragged card to target slot
             }
         }
     }
@@ -224,7 +225,7 @@ public class CardLayoutManager : MonoBehaviour
             var card = list[i];
 
             if (card == exclude)
-                continue;
+                continue; //skip excluded card
 
             float xPos = (i - centerIndex) * dynamicSpacing;
             float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f;
@@ -233,14 +234,15 @@ public class CardLayoutManager : MonoBehaviour
             Vector3 targetPos = new Vector3(xPos, yPos, 0);
 
             if (card == selectedCard)
-                targetPos += Vector3.up * selectRaise;
+                targetPos += Vector3.up * selectRaise; //raise selected card
 
-            card.SetLocalPositionInstant(targetPos);
+            card.SetLocalPositionInstant(targetPos); //instantly set position for smooth layout
         }
     }
 
     public int GetCardOrder(CardInteraction card)
     {
-        return cards.IndexOf(card);
+        return cards.IndexOf(card); //return index of card in list for sorting
     }
+
 }
