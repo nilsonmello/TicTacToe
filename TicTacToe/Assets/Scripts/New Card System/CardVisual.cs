@@ -1,250 +1,205 @@
-using UnityEngine;
-using UnityEngine.EventSystems;
-using TMPro;
 using DG.Tweening;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
-public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class CardVisual : MonoBehaviour
 {
-    [Header("Text References")]
-    public TextMeshProUGUI nameText; //text field for card name
-    public TextMeshProUGUI descriptionText; //text field for card description
-    public TextMeshProUGUI costText; //text field for card energy cost
+    [Header("Text and Image")]
+    public Image artworkImage;
 
-    [Header("Movement")]
-    public float moveDuration = 0.25f; //duration for card movement tween
-    [HideInInspector] public bool allowPositionInterpolation = true; //flag to allow smooth move
+    [Header("Smooth and rotate")]
+    private Transform target;
+    private Vector3 positionOffset = Vector3.zero;
+    private Vector3 lastPosition;
+    private Vector3 smoothedVelocity;
 
-    [Header("Hover Effect")]
-    public Transform scaleTarget; //transform to apply scale effects
-    public float hoverScale = 1.05f; //scale amount on hover
-    public float hoverDuration = 0.15f; //duration of hover scale tween
+    [Header("Dotween vars")]
+    [SerializeField] private float shakeDur = 0.1f;
+    [SerializeField] private float shakeStr = 0.1f;
+    [SerializeField] private int shakeVib = 1;
+    [SerializeField] private float shakeRand = 0.1f;
 
-    [Header("Shake Settings")]
-    public float hoverShakeDuration = 0.25f; //duration of shake on hover
-    public float hoverShakeStrength = 10f; //strength of shake effect
-    public int hoverShakeVibrato = 10; //number of shakes
-    public float hoverShakeRandomness = 90f; //randomness angle of shake
+    [Header("Sorting layers")]
+    public Canvas cardCanvas;
+    private int originalSortingOrder;
 
-    [Header("Punch Settings")]
-    public float punchDuration = 0.3f; //duration of punch effect
-    public float punchStrength = 20f; //strength of punch movement
-    public int punchVibrato = 10; //vibrato for punch tween
-    public float punchElasticity = 1f; //elasticity of punch tween
-
-    [Header("Drag Effect")]
-    public float dragScale = 1.2f; //scale when dragging card
-    public float dragScaleDuration = 1.0f; //duration to return scale after drag
-    public float maxRotationZ = 10f; //max z rotation during drag
-
-    [Header("Card State")]
-    private Card card; //reference to card data
-    private Vector3 positionTarget; //target local position for smooth movement
-    private Tween moveTween; //tween for position movement
-    private Tween scaleTween; //tween for scaling effects
-    private Tween shakeTween; //tween for shake effect
-    private Tween punchTween; //tween for punch effect
-    private float previousX; //previous x position for rotation calculation
-    private bool isDraggingVisual = false; //flag to block hover scale while dragging
-
-    [Header("Hover Rotation Settings")]
-    public float hoverTiltAmount = 5f; //amount of tilt when hovered
-    public float tiltLerpSpeed = 8f; //speed of tilt lerp
-    public float idleTiltSpeed = 2f; //speed of idle tilt
-    public float idleTiltMagnitude = 2f; //magnitude of idle tilt
-    private bool isHovered = false; //flag to check if card is hovered
-    private int savedIndex; //random index for idle tilt effect
-
-    [Header("Interaction References")]
-    private CardInteraction cachedInteraction; //cached reference to CardInteraction component
-    private CardLayoutManager cachedLayout; //cached reference to CardLayoutManager component
-    public UnityEngine.UI.Image artworkImage; //reference to card artwork image
+    [Header("Balatro Hover Rotation")]
+    [SerializeField] private float hoverZAmplitude = 5f;
+    [SerializeField] private float hoverZSpeed = 3f;
+    [SerializeField] private int savedIndex = 0;
+    [SerializeField] private float maxTiltZ = 10f;
+    [SerializeField] private float maxTiltX = 10f;
+    [SerializeField] private float rotationSmoothSpeed = 8f;
+    private Quaternion targetRotation;
+    private bool isHovered = false;
+    private bool isSelected = false;
+    private Vector2 hoverMousePosition = Vector2.zero;
+    private Vector2 idleVirtualMousePos = Vector2.zero;
+    [SerializeField] private float idleOscillationSpeed = 1f;
+    [SerializeField] private float idleOscillationAmplitude = 0.5f;
 
     private void Awake()
     {
-        positionTarget = transform.localPosition; //initialize target position to current
+        cardCanvas = GetComponent<Canvas>();
+        if (cardCanvas != null)
+            cardCanvas.overrideSorting = true;
 
-        if (scaleTarget == null)
-        {
-            scaleTarget = transform.parent != null ? transform.parent : transform; //fallback
-            Debug.Log($"[CardVisual] scaleTarget not assigned, defaulting to: {scaleTarget.name}");
-        }
-        else
-        {
-            Debug.Log($"[CardVisual] scaleTarget assigned: {scaleTarget.name}");
-        }
+        targetRotation = transform.rotation;
+    }
 
-        savedIndex = Random.Range(0, 100); //save random index for idle tilt
+    public void SetCard(Card card)
+    {
+        if (card == null || artworkImage == null) return;
+
+        artworkImage.sprite = card.Artwork;
+    }
+
+    public void SetHoverState(bool isOver)
+    {
+        isHovered = isOver;
+        if (!isOver)
+            hoverMousePosition = Vector2.zero;
+    }
+
+    public void SetSelectedState(bool selected)
+    {
+        isSelected = selected;
+        if (selected == false)
+        {
+            isHovered = false;
+            hoverMousePosition = Vector2.zero;
+        }
+    }
+
+    public void UpdateHoverMousePosition(Vector2 normalizedLocalPos)
+    {
+        hoverMousePosition = normalizedLocalPos;
+        isHovered = true;
+    }
+
+    public void SetFollowTarget(Transform t)
+    {
+        target = t;
+        lastPosition = t.position;
     }
 
     private void Update()
     {
-        HandleRotationEffect();
-    }
+        if (target == null) return;
 
-    //setup visuals from data
-    public void Setup(Card cardData)
-    {
-        card = cardData;
-        nameText.text = card.Name;
-        descriptionText.text = card.Description;
-        costText.text = card.EnergyCost.ToString();
+        Vector3 targetPos = target.position + positionOffset;
+        transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * 20f);
 
-        if (artworkImage != null && card.Artwork != null)
+        Vector3 movement = (target.position - lastPosition) / Time.deltaTime;
+        smoothedVelocity = Vector3.Lerp(smoothedVelocity, movement, Time.deltaTime * 10f);
+        lastPosition = target.position;
+
+        float tiltX = Mathf.Clamp(-smoothedVelocity.y * 0.1f, -10f, 10f);
+        float tiltY = Mathf.Clamp(smoothedVelocity.x * 0.1f, -10f, 10f);
+        float tiltZ = Mathf.Clamp(-smoothedVelocity.x * 0.2f, -15f, 15f);
+
+        float extraX = 0f;
+        float extraZ = 0f;
+
+        if (isHovered)
         {
-            artworkImage.sprite = card.Artwork;
-        }
-    }
-
-    //move card to a new local position with tween
-    public void MoveToPosition(Vector3 newPosition)
-    {
-        if (!allowPositionInterpolation)
-        {
-            moveTween?.Kill();
-            transform.localPosition = newPosition;
-            positionTarget = newPosition;
-            return;
-        }
-
-        positionTarget = newPosition;
-        moveTween?.Kill();
-
-        moveTween = transform.DOLocalMove(positionTarget, moveDuration)
-            .SetEase(Ease.OutCubic)
-            .OnComplete(() => positionTarget = transform.localPosition);
-    }
-
-    //select visual feedback
-    public void SelectVisual()
-    {
-        KillAllTweens();
-        punchTween = transform.DOPunchPosition(Vector3.up * punchStrength, punchDuration, punchVibrato, punchElasticity);
-        scaleTween = scaleTarget.DOScale(1.2f, 0.2f).SetEase(Ease.OutBack);
-    }
-
-    //deselect visual feedback
-    public void DeselectVisual()
-    {
-        KillAllTweens();
-        punchTween = transform.DOPunchPosition(Vector3.up * punchStrength, punchDuration, punchVibrato, punchElasticity);
-        scaleTween = scaleTarget.DOScale(1f, 0.2f).SetEase(Ease.InOutSine);
-    }
-
-    //hover enter event
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        isHovered = true;
-
-        if (!IsSelected() && !isDraggingVisual)
-        {
-            KillScaleAndShakeTweens();
-            scaleTween = scaleTarget.DOScale(hoverScale, hoverDuration).SetEase(Ease.OutSine);
-            shakeTween = transform.DOShakePosition(hoverShakeDuration, hoverShakeStrength, hoverShakeVibrato, hoverShakeRandomness, fadeOut: true);
-        }
-    }
-
-    //hover exit event
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        isHovered = false;
-
-        if (!IsSelected() && !isDraggingVisual)
-        {
-            KillScaleAndShakeTweens();
-            scaleTween = scaleTarget.DOScale(1f, hoverDuration).SetEase(Ease.OutSine);
-            AnimateMoveToLocalPosition(positionTarget);
-        }
-    }
-
-    //begin dragging
-    public void OnBeginDragVisual()
-    {
-        isDraggingVisual = true;
-        scaleTween?.Kill();
-        scaleTween = scaleTarget.DOScale(dragScale, 0.2f).SetEase(Ease.OutBack);
-    }
-
-    //on dragging (unused)
-    public void OnDragVisual() { }
-
-    //end dragging
-    public void OnEndDragVisual()
-    {
-        isDraggingVisual = false;
-        scaleTween?.Kill();
-        scaleTween = scaleTarget.DOScale(1f, dragScaleDuration).SetEase(Ease.InOutSine);
-    }
-
-    //check if this card is selected
-    private bool IsSelected()
-    {
-        if (cachedInteraction == null)
-            cachedInteraction = GetComponentInParent<CardInteraction>();
-
-        if (cachedLayout == null && cachedInteraction != null)
-            cachedLayout = cachedInteraction.GetComponentInParent<CardLayoutManager>();
-
-        return cachedLayout != null && cachedLayout.IsSelected(cachedInteraction);
-    }
-
-    //kill all tweens
-    public void KillAllTweens()
-    {
-        scaleTween?.Kill();
-        shakeTween?.Kill();
-        punchTween?.Kill();
-    }
-
-    //kill only scale and shake
-    private void KillScaleAndShakeTweens()
-    {
-        scaleTween?.Kill();
-        shakeTween?.Kill();
-    }
-
-    //cleanup
-    private void OnDestroy()
-    {
-        KillAllTweens();
-    }
-
-    //handle rotation effect based on hover state
-    //this method applies a tilt effect when hovered or selected
-    private void HandleRotationEffect()
-    {
-        if (isDraggingVisual) return;
-
-        if ((isHovered && !IsSelected()) || (IsSelected() && isHovered))
-        {
-            Camera cam = Camera.main;
-            Vector3 screenPos = Input.mousePosition;
-
-            float zDepth = Vector3.Distance(cam.transform.position, transform.position);
-            screenPos.z = zDepth;
-
-            Vector3 mouseWorld = cam.ScreenToWorldPoint(screenPos);
-            Vector3 offset = mouseWorld - transform.position;
-
-            float tiltX = Mathf.Clamp(offset.y * -hoverTiltAmount, -10f, 10f);
-            float tiltY = Mathf.Clamp(offset.x * hoverTiltAmount, -10f, 10f);
-
-            Quaternion targetRot = Quaternion.Euler(tiltX, tiltY, 0f);
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, Time.deltaTime * tiltLerpSpeed);
+            (extraX, extraZ) = GetHoverRotationOffsets();
         }
         else
         {
-            float angleZ = Mathf.Sin(Time.time * idleTiltSpeed + savedIndex) * idleTiltMagnitude;
-            Quaternion targetRot = Quaternion.Euler(0f, 0f, angleZ);
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRot, Time.deltaTime * tiltLerpSpeed);
+            (extraX, extraZ) = GetIdleRotationOffsets();
         }
+
+        targetRotation = Quaternion.Euler(tiltX + extraX, tiltY, tiltZ + extraZ);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSmoothSpeed);
     }
-    
-    //animate move to a new local position
-    //this method uses a tween to smoothly move the card to the target position
-    public void AnimateMoveToLocalPosition(Vector3 targetPosition)
+
+    public (float extraX, float extraZ) GetHoverRotationOffsets()
     {
-        moveTween?.Kill();
-        positionTarget = targetPosition;
-        moveTween = transform.DOLocalMove(targetPosition, 0.3f).SetEase(Ease.OutCubic);
+        float normX = Mathf.Clamp(hoverMousePosition.x, -0.5f, 0.5f) * 2f;
+        float normY = Mathf.Clamp(hoverMousePosition.y, -0.5f, 0.5f) * 2f;
+
+        float extraZ = -normX * maxTiltZ;
+        float extraX = normY * maxTiltX;
+
+        return (extraX, extraZ);
     }
+
+    public (float extraX, float extraZ) GetIdleRotationOffsets()
+    {
+        idleVirtualMousePos.x = Mathf.Sin(Time.time * idleOscillationSpeed) * idleOscillationAmplitude;
+        idleVirtualMousePos.y = Mathf.Cos(Time.time * idleOscillationSpeed * 0.7f) * idleOscillationAmplitude;
+
+        float normX = Mathf.Clamp(idleVirtualMousePos.x, -0.5f, 0.5f) * 2f;
+        float normY = Mathf.Clamp(idleVirtualMousePos.y, -0.5f, 0.5f) * 2f;
+
+        float extraZ = -normX * maxTiltZ;
+        float extraX = normY * maxTiltX;
+
+        return (extraX, extraZ);
+    }
+
+    public void SetOriginalSortingOrder(int order)
+    {
+        originalSortingOrder = order;
+        if (cardCanvas != null)
+            cardCanvas.sortingOrder = order;
+    }
+
+    public void ResetSortingOrder(int newOrder)
+    {
+        originalSortingOrder = newOrder;
+        if (cardCanvas != null)
+            cardCanvas.sortingOrder = originalSortingOrder;
+    }
+
+    public void SetSortingOrder(int order)
+    {
+        originalSortingOrder = order;
+        if (cardCanvas != null)
+            cardCanvas.sortingOrder = order;
+    }
+
+    public void ReturnSortingLayer()
+    {
+        cardCanvas.sortingOrder = originalSortingOrder;
+    }
+
+    public void PlayPoniterEnter()
+    {
+        transform.DOKill();
+        transform.localScale = Vector3.one;
+        transform.DOScale(1.1f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOShakePosition(0.1f, 10f, 20, 0);
+    }
+
+    public void PlayPointerExit()
+    {
+        transform.DOKill();
+        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+    }
+
+    public void SelectVisual()
+    {
+        transform.DOScale(1.3f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand);
+    }
+
+    public void DeselectVisual()
+    {
+        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand);
+    }
+
+    public void IndragTweens()
+    {
+        transform.DOScale(1.5f, 0.3f).SetEase(Ease.OutBack);
+    }
+
+    public void OffDragTweens()
+    {
+        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+    }
+
 }

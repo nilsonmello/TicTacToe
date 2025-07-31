@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class DiscardComboButton : MonoBehaviour
 {
+    [Header("Panel references")]
     public CardLayoutManager comboPanel;
     public CardLayoutManager discardPanel;
 
@@ -43,8 +44,6 @@ public class DiscardComboButton : MonoBehaviour
 
             card.MoveToLocalPosition(targetLocalPos);
 
-            card.SetOriginalSortingOrder(i);
-            card.SetSortingOrder(i);
             card.canInteract = false;
 
             discardPanel.panelData?.OnCardDropped(card);

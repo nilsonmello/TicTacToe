@@ -2,14 +2,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
 
-public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler,
+    IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler
 {
     [Header("references")]
     private Canvas canvas;
     private CanvasGroup canvasGroup;
     private RectTransform rectTransform;
     private Transform originalParent;
-    public CardVisual cardVisual;
     public CardLayoutManager layoutManager;
 
     [Header("smooth movement")]
@@ -37,6 +37,10 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     private CardLayoutManager previousLayoutManager;
     public bool canInteract = true;
 
+    [Header("Visual Prefab")]
+    public GameObject cardVisualPrefab;
+    public CardVisual cardVisualInstance;
+
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -59,37 +63,58 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         lastPosition = transform.localPosition;
     }
 
+    private void Start()
+    {
+        if (cardVisualPrefab != null)
+        {
+            GameObject visualObj = Instantiate(cardVisualPrefab, transform.position, transform.rotation);
+            cardVisualInstance = visualObj.GetComponent<CardVisual>();
+
+            if (cardVisualInstance != null)
+            {
+                visualObj.transform.SetParent(canvas.transform, false);
+
+                cardVisualInstance.SetFollowTarget(transform);
+            }
+            else
+            {
+                Debug.LogWarning("Cardvisual component missing on prefab.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("No cardvisual prefab assigned to cardinteraction.");
+        }
+    }
+
     private void Update()
     {
         if (isMoving) return;
 
         if (isDragging)
         {
-            transform.localPosition = Vector3.SmoothDamp(
-                transform.localPosition,
-                targetDragPosition,
-                ref velocity,
-                followSmoothTime
+            transform.localPosition = targetDragPosition;
+        }
+    }
+
+    public void OnPointerMove(PointerEventData eventData)
+    {
+        if (cardVisualInstance == null || !cardVisualInstance.gameObject.activeSelf) return;
+
+        RectTransform cardRect = transform as RectTransform;
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            cardRect, eventData.position, eventData.enterEventCamera, out Vector2 localPoint))
+        {
+            Vector2 normalizedPos = new Vector2(
+                localPoint.x / (cardRect.rect.width / 2f),
+                localPoint.y / (cardRect.rect.height / 2f)
             );
 
-            float horizontalDelta = targetDragPosition.x - transform.localPosition.x;
-            UpdateRotation(horizontalDelta, 10f);
-        }
-        else
-        {
-            Vector3 currentPosition = transform.localPosition;
-            float deltaX = currentPosition.x - lastPosition.x;
+            normalizedPos.x = Mathf.Clamp(normalizedPos.x, -0.5f, 0.5f);
+            normalizedPos.y = Mathf.Clamp(normalizedPos.y, -0.5f, 0.5f);
 
-            float targetAngle = Mathf.Clamp(deltaX * rotationMultiplier * 40f, -8f, 8f);
-            float smoothZ = Mathf.LerpAngle(cardVisual.scaleTarget.localRotation.eulerAngles.z, targetAngle, Time.deltaTime * 6f);
-            Quaternion targetRotation = Quaternion.Euler(0f, 0f, smoothZ);
-
-            if (cardVisual != null && cardVisual.scaleTarget != null)
-            {
-                cardVisual.scaleTarget.localRotation = targetRotation;
-            }
-
-            lastPosition = currentPosition;
+            cardVisualInstance.UpdateHoverMousePosition(normalizedPos);
         }
     }
 
@@ -111,53 +136,16 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     {
         isMoving = true;
 
-        Vector3 startPos = transform.localPosition;
-        Quaternion startRotation = transform.localRotation;
-        float distance = Vector3.Distance(startPos, endPos);
-
-        float horizontalDelta = endPos.x - startPos.x;
-        float rawAngle = horizontalDelta * rotationMultiplier * 2f;
-        float maxAngle = 80f;
-        float clampedAngle = Mathf.Sign(rawAngle) * Mathf.Min(Mathf.Abs(rawAngle), maxAngle);
-        Quaternion targetRotation = Quaternion.Euler(0f, 0f, clampedAngle);
-
-        float t = 0f;
         while (Vector3.Distance(transform.localPosition, endPos) > 0.01f)
         {
             transform.localPosition = Vector3.MoveTowards(transform.localPosition, endPos, moveSpeed * Time.deltaTime);
-
-            float distCovered = Vector3.Distance(startPos, transform.localPosition);
-            t = Mathf.Clamp01(distCovered / distance);
-
-            transform.localRotation = Quaternion.Lerp(startRotation, targetRotation, t);
-
             yield return null;
         }
 
         transform.localPosition = endPos;
 
-        float rotT = 0f;
-        while (Quaternion.Angle(transform.localRotation, originalRotation) > 0.5f)
-        {
-            transform.localRotation = Quaternion.Lerp(transform.localRotation, originalRotation, rotT);
-            rotT += Time.deltaTime * 2f;
-            yield return null;
-        }
-
-        transform.localRotation = originalRotation;
         moveCoroutine = null;
         isMoving = false;
-    }
-
-    private void UpdateRotation(float horizontalDelta, float lerpSpeed)
-    {
-        float angle = horizontalDelta * rotationMultiplier;
-        Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
-
-        if (cardVisual != null && cardVisual.scaleTarget != null)
-        {
-            cardVisual.scaleTarget.localRotation = Quaternion.Slerp(cardVisual.scaleTarget.localRotation, targetRotation, Time.deltaTime * lerpSpeed);
-        }
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -166,10 +154,28 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         if (layoutManager != null)
         {
-            if (layoutManager.IsSelected(this))
+            bool wasSelected = layoutManager.IsSelected(this);
+
+            if (wasSelected)
+            {
                 layoutManager.DeselectCard();
+                if (cardVisualInstance != null)
+                {
+                    cardVisualInstance.DeselectVisual();
+                    cardVisualInstance.SetSelectedState(false);
+                    cardVisualInstance.ReturnSortingLayer();
+                }
+            }
             else
+            {
                 layoutManager.SelectCard(this);
+                if (cardVisualInstance != null)
+                {
+                    cardVisualInstance.SelectVisual();
+                    cardVisualInstance.SetSelectedState(true);
+                    cardVisualInstance.SetSortingOrder(1000);
+                }
+            }
         }
     }
 
@@ -182,8 +188,6 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (layoutManager != null)
             layoutManager.DeselectAllExcept(null);
 
-        cardVisual?.KillAllTweens();
-
         if (moveCoroutine != null)
         {
             StopCoroutine(moveCoroutine);
@@ -191,12 +195,6 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         isMoving = false;
-
-        if (cardVisual != null)
-        {
-            cardVisual.scaleTarget.localScale = Vector3.one;
-            cardVisual.scaleTarget.localRotation = Quaternion.identity;
-        }
 
         originalParent = transform.parent;
         canvasGroup.blocksRaycasts = false;
@@ -216,14 +214,16 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         transform.SetParent(canvas.transform, true);
         isDragging = true;
-
-        cardVisual?.OnBeginDragVisual();
-        cardVisual.enabled = false;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
         if (!canInteract) return;
+
+        if (cardVisualInstance != null)
+        {
+            cardVisualInstance.IndragTweens();
+        }
 
         Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : Camera.main;
 
@@ -242,13 +242,19 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         layoutManager?.SimulateDrag(this, targetDragPosition.x);
-        cardVisual?.OnDragVisual();
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         isDragging = false;
+
         if (!canInteract) return;
+
+        if (cardVisualInstance != null)
+        {
+            cardVisualInstance.OffDragTweens();
+        }
+
         canvasGroup.blocksRaycasts = true;
 
         CardLayoutManager targetLayout = null;
@@ -290,14 +296,32 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         transform.SetParent(layoutManager.transform, true);
-
         MoveToLocalPosition(transform.localPosition);
-
+        layoutManager.ReorderCard(this);
+        UpdateVisualSortingOrder(layoutManager.GetCardOrder(this));
         layoutManager.DeselectCard();
+    }
 
-        cardVisual.enabled = true;
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (layoutManager.IsSelected(this)) return;
 
-        cardVisual?.OnEndDragVisual();
+        if (cardVisualInstance != null)
+        {
+            cardVisualInstance.SetHoverState(true);
+            cardVisualInstance.PlayPoniterEnter();
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (cardVisualInstance != null)
+        {
+            cardVisualInstance.SetHoverState(false);
+
+            if (!layoutManager.IsSelected(this))
+                cardVisualInstance.PlayPointerExit();
+        }
     }
 
     public void SetLocalPositionInstant(Vector3 pos)
@@ -312,18 +336,20 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         transform.localPosition = pos;
     }
 
-    public void SetSortingOrder(int order)
+    public void UpdateVisualSortingOrder(int order)
     {
-        cardCanvas.sortingOrder = order;
+        if (cardVisualInstance != null)
+            cardVisualInstance.SetOriginalSortingOrder(order);
     }
 
-    public void RestoreOriginalSortingOrder()
+    public void Initialize(Card card)
     {
-        cardCanvas.sortingOrder = originalSortingOrder;
+        StartCoroutine(DelayedSetCard(card));
     }
 
-    public void SetOriginalSortingOrder(int order)
+    private IEnumerator DelayedSetCard(Card card)
     {
-        originalSortingOrder = order;
+        yield return new WaitUntil(() => cardVisualInstance != null);
+        cardVisualInstance.SetCard(card);
     }
 }

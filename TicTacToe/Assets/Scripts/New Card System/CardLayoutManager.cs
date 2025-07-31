@@ -3,10 +3,9 @@ using UnityEngine;
 
 public class CardLayoutManager : MonoBehaviour
 {
-    public static List<CardLayoutManager> AllPanels = new List<CardLayoutManager>();
-
-    [Header("Cards")]
+    [Header("Cards and list panels")]
     public List<CardInteraction> cards = new List<CardInteraction>();
+    public static List<CardLayoutManager> AllPanels = new List<CardLayoutManager>();
 
     [Header("Layout Settings")]
     public float dynamicSpacing = 150f;
@@ -38,23 +37,25 @@ public class CardLayoutManager : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            if (cards[i].IsDragging)
+            var card = cards[i];
+
+            if (card.IsDragging)
                 continue;
 
             float xPos = (i - centerIndex) * dynamicSpacing;
-
             float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f;
-
             float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
-
             Vector3 targetPos = new Vector3(xPos, yPos, 0);
 
-            if (cards[i] == selectedCard)
+            if (card == selectedCard)
                 targetPos += Vector3.up * selectRaise;
 
-            cards[i].MoveToLocalPosition(targetPos);
-            cards[i].SetOriginalSortingOrder(i);
-            cards[i].SetSortingOrder(i);
+            card.MoveToLocalPosition(targetPos);
+
+            if (card != selectedCard && card.cardVisualInstance != null)
+            {
+                card.cardVisualInstance.SetSortingOrder(count - i);
+            }
         }
     }
 
@@ -62,16 +63,14 @@ public class CardLayoutManager : MonoBehaviour
     {
         if (!cards.Contains(draggedCard)) return;
 
-        int count = cards.Count;
-        if (count == 0) return;
+        List<CardInteraction> tempList = new List<CardInteraction>(cards);
+        tempList.Remove(draggedCard);
 
-        float centerIndex = (count - 1) / 2f;
-
-        cards.Remove(draggedCard);
-
+        float centerIndex = (tempList.Count) / 2f;
         int newIndex = 0;
         float closestDist = float.MaxValue;
-        for (int i = 0; i <= cards.Count; i++)
+
+        for (int i = 0; i <= tempList.Count; i++)
         {
             float xPos = (i - centerIndex) * dynamicSpacing;
             float dist = Mathf.Abs(dragX - xPos);
@@ -82,26 +81,27 @@ public class CardLayoutManager : MonoBehaviour
             }
         }
 
-        newIndex = Mathf.Clamp(newIndex, 0, cards.Count);
-        cards.Insert(newIndex, draggedCard);
+        newIndex = Mathf.Clamp(newIndex, 0, tempList.Count);
+        tempList.Insert(newIndex, draggedCard);
 
-        LayoutCards();
+        ApplyLayoutFromList(tempList, draggedCard);
     }
 
-    public void ReorderCard(CardInteraction card, float localPosX)
+    public void ReorderCard(CardInteraction card)
     {
         if (!cards.Contains(card)) return;
 
-        int count = cards.Count;
-        if (count == 0) return;
+        List<CardInteraction> tempList = new List<CardInteraction>(cards);
+        tempList.Remove(card);
 
-        float centerIndex = (count - 1) / 2f;
+        float localPosX = transform.InverseTransformPoint(card.transform.position).x;
 
-        cards.Remove(card);
+        float centerIndex = (tempList.Count) / 2f;
 
         int newIndex = 0;
         float closestDist = float.MaxValue;
-        for (int i = 0; i <= cards.Count; i++)
+
+        for (int i = 0; i <= tempList.Count; i++)
         {
             float xPos = (i - centerIndex) * dynamicSpacing;
             float dist = Mathf.Abs(localPosX - xPos);
@@ -112,10 +112,11 @@ public class CardLayoutManager : MonoBehaviour
             }
         }
 
-        newIndex = Mathf.Clamp(newIndex, 0, cards.Count);
-        cards.Insert(newIndex, card);
+        newIndex = Mathf.Clamp(newIndex, 0, tempList.Count);
+        tempList.Insert(newIndex, card);
 
-        LayoutCards();
+        cards = tempList;
+        ApplyLayoutFromList(cards);
     }
 
     public bool IsSelected(CardInteraction card)
@@ -128,22 +129,31 @@ public class CardLayoutManager : MonoBehaviour
         if (selectedCard == card)
             return;
 
-        selectedCard = card;
-        LayoutCards();
-
-        if (selectedCard != null)
+        if (selectedCard != null && selectedCard.cardVisualInstance != null)
         {
-            selectedCard.cardVisual.DeselectVisual();
-            selectedCard.RestoreOriginalSortingOrder();
+            int order = cards.IndexOf(selectedCard);
+            selectedCard.cardVisualInstance.ResetSortingOrder(order);
+            selectedCard.cardVisualInstance.DeselectVisual();
+            selectedCard.cardVisualInstance.SetHoverState(false);
         }
+
+        selectedCard = card;
+
+        if (selectedCard != null && selectedCard.cardVisualInstance != null)
+        {
+            selectedCard.cardVisualInstance.SelectVisual();
+        }
+
+        LayoutCards();
     }
 
     public void DeselectCard()
     {
-        if (selectedCard != null)
+        if (selectedCard != null && selectedCard.cardVisualInstance != null)
         {
-            selectedCard.cardVisual.DeselectVisual();
-            selectedCard.RestoreOriginalSortingOrder();
+            int order = cards.IndexOf(selectedCard);
+            selectedCard.cardVisualInstance.ResetSortingOrder(order);
+            selectedCard.cardVisualInstance.DeselectVisual();
         }
 
         selectedCard = null;
@@ -152,11 +162,85 @@ public class CardLayoutManager : MonoBehaviour
 
     public void DeselectAllExcept(CardInteraction exceptCard)
     {
-        if (exceptCard == null)
-            selectedCard = null;
-        else if (selectedCard != exceptCard)
+        if (selectedCard != null && selectedCard != exceptCard && selectedCard.cardVisualInstance != null)
+        {
+            selectedCard.cardVisualInstance.DeselectVisual();
+            selectedCard.cardVisualInstance.SetSelectedState(false);
+            selectedCard.cardVisualInstance.ReturnSortingLayer();
+        }
+
+        if (exceptCard == null || selectedCard != exceptCard)
             selectedCard = null;
 
         LayoutCards();
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (cards == null || cards.Count == 0)
+            return;
+
+        float centerIndex = (cards.Count - 1) / 2f;
+
+        foreach (var card in cards)
+        {
+            if (card.IsDragging)
+            {
+                float dragX = card.transform.localPosition.x;
+
+                int newIndex = 0;
+                float closestDist = float.MaxValue;
+                for (int i = 0; i <= cards.Count; i++)
+                {
+                    float xPos = (i - centerIndex) * dynamicSpacing;
+                    float dist = Mathf.Abs(dragX - xPos);
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        newIndex = i;
+                    }
+                }
+
+                float slotXPos = (newIndex - centerIndex) * dynamicSpacing;
+                float normalizedX = centerIndex != 0 ? (newIndex - centerIndex) / centerIndex : 0f;
+                float slotYPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
+                Vector3 slotLocalPos = new Vector3(slotXPos, slotYPos, 0);
+
+                Vector3 cardWorldPos = card.transform.position;
+                Vector3 slotWorldPos = transform.TransformPoint(slotLocalPos);
+
+                Debug.DrawLine(cardWorldPos, slotWorldPos, Color.green);
+            }
+        }
+    }
+
+    private void ApplyLayoutFromList(List<CardInteraction> list, CardInteraction exclude = null)
+    {
+        int count = list.Count;
+        float centerIndex = (count - 1) / 2f;
+
+        for (int i = 0; i < count; i++)
+        {
+            var card = list[i];
+
+            if (card == exclude)
+                continue;
+
+            float xPos = (i - centerIndex) * dynamicSpacing;
+            float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f;
+            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
+
+            Vector3 targetPos = new Vector3(xPos, yPos, 0);
+
+            if (card == selectedCard)
+                targetPos += Vector3.up * selectRaise;
+
+            card.SetLocalPositionInstant(targetPos);
+        }
+    }
+
+    public int GetCardOrder(CardInteraction card)
+    {
+        return cards.IndexOf(card);
     }
 }
