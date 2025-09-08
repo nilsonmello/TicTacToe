@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        Debug.Log("Current Game State: " + gameState);
+       // Debug.Log("Current Game State: " + gameState);
         switch (gameState)
         {
             case GameState.INITIALIZING:

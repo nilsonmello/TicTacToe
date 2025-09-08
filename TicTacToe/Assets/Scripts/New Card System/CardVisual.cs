@@ -38,6 +38,7 @@ public class CardVisual : MonoBehaviour
     private Vector2 idleVirtualMousePos = Vector2.zero;
     [SerializeField] private float idleOscillationSpeed = 1f;
     [SerializeField] private float idleOscillationAmplitude = 0.5f;
+    [SerializeField] private float scaleRaise = 1.3f;
 
     private void Awake()
     {
@@ -171,7 +172,7 @@ public class CardVisual : MonoBehaviour
     {
         transform.DOKill(); //kill any running tweens
         transform.localScale = Vector3.one;
-        transform.DOScale(1.1f, 0.3f).SetEase(Ease.OutBack); //scale up on pointer enter
+        transform.DOScale(1.05f, 0.3f).SetEase(Ease.OutBack); //scale up on pointer enter
         transform.DOShakePosition(0.1f, 10f, 20, 0); //shake effect
     }
 
@@ -183,7 +184,7 @@ public class CardVisual : MonoBehaviour
 
     public void SelectVisual()
     {
-        transform.DOScale(1.3f, 0.3f).SetEase(Ease.OutBack); //scale up on select
+        transform.DOScale(scaleRaise, 0.3f).SetEase(Ease.OutBack); //scale up on select
         transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand); //shake effect on select
     }
 
@@ -195,7 +196,7 @@ public class CardVisual : MonoBehaviour
 
     public void IndragTweens()
     {
-        transform.DOScale(1.3f, 0.3f).SetEase(Ease.OutBack); //scale up while dragging
+        transform.DOScale(scaleRaise, 0.3f).SetEase(Ease.OutBack); //scale up while dragging
     }
 
     public void OffDragTweens()

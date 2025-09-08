@@ -61,19 +61,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   artworkImage: {fileID: 1706775011100659959}
-  shakeDur: 0.1
-  shakeStr: 20
-  shakeVib: 30
-  shakeRand: 0.1
+  shakeDur: 0.06
+  shakeStr: 5
+  shakeVib: 10
+  shakeRand: 0.06
   cardCanvas: {fileID: 0}
-  hoverZAmplitude: 5
-  hoverZSpeed: 3
+  hoverZAmplitude: 2
+  hoverZSpeed: 2
   savedIndex: 0
   maxTiltZ: 10
   maxTiltX: 10
   rotationSmoothSpeed: 8
   idleOscillationSpeed: 1
-  idleOscillationAmplitude: 0.5
+  idleOscillationAmplitude: 0.1
+  scaleRaise: 1.1
 --- !u!114 &1706775011100659959
 MonoBehaviour:
   m_ObjectHideFlags: 0

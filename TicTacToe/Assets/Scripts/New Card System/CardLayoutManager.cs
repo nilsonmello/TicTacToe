@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class CardLayoutManager : MonoBehaviour
 {
+
     [Header("Cards and list panels")]
     public List<CardInteraction> cards = new List<CardInteraction>(); //list of cards in this panel
     public static List<CardLayoutManager> AllPanels = new List<CardLayoutManager>(); //static list of all panels
@@ -31,34 +32,37 @@ public class CardLayoutManager : MonoBehaviour
     public void LayoutCards()
     {
         int count = cards.Count;
-        if (count == 0) return; //skip if no cards
+        if (count == 0) return;
 
-        float centerIndex = (count - 1) / 2f; //calculate center index for symmetrical layout
+        float maxWidth = 1000;
+        float effectiveSpacing = Mathf.Min(dynamicSpacing, maxWidth / Mathf.Max(1, count - 1));
+
+        float centerIndex = (count - 1) / 2f;
 
         for (int i = 0; i < count; i++)
         {
             var card = cards[i];
 
             if (card.IsDragging)
-                continue; //skip cards currently being dragged
+                continue;
 
-            float xPos = (i - centerIndex) * dynamicSpacing; //calculate x position based on index
-            float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f; //normalize position between -1 and 1
-            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight; //calculate y position on curve
+            float xPos = (i - centerIndex) * effectiveSpacing;
+            float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f;
+            float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
             Vector3 targetPos = new Vector3(xPos, yPos, 0);
 
             if (card == selectedCard)
-                targetPos += Vector3.up * selectRaise; //raise selected card
+                targetPos += Vector3.up * selectRaise;
 
-            card.MoveToLocalPosition(targetPos); //move card smoothly to target position
+            card.MoveToLocalPosition(targetPos);
 
             if (card != selectedCard && card.cardVisualInstance != null)
             {
-                card.cardVisualInstance.SetSortingOrder(count - i); //set sorting order for layering cards visually
+                card.cardVisualInstance.SetSortingOrder(count - i);
             }
         }
     }
-
+    
     public void SimulateDrag(CardInteraction draggedCard, float dragX)
     {
         if (!cards.Contains(draggedCard)) return; //ignore if card not in this panel

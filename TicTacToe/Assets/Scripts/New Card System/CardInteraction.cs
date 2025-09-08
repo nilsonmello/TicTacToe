@@ -281,7 +281,6 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
             layoutManager = targetLayout; //set new layout manager
             layoutManager.cards.Add(this); //add to new layout
-
             layoutManager.LayoutCards(); //relayout cards
 
             layoutManager.panelData.OnCardDropped(this); //notify panel of drop
