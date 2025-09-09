@@ -22,12 +22,9 @@ public class CardVisual : MonoBehaviour
 
     [Header("Sorting layers")]
     public Canvas cardCanvas;
-    private int originalSortingOrder;
+    public int originalSortingOrder;
 
     [Header("Hover rotation")]
-    [SerializeField] private float hoverZAmplitude = 5f;
-    [SerializeField] private float hoverZSpeed = 3f;
-    [SerializeField] private int savedIndex = 0;
     [SerializeField] private float maxTiltZ = 10f;
     [SerializeField] private float maxTiltX = 10f;
     [SerializeField] private float rotationSmoothSpeed = 8f;
@@ -42,7 +39,7 @@ public class CardVisual : MonoBehaviour
 
     private void Awake()
     {
-        cardCanvas = GetComponent<Canvas>();
+        cardCanvas = GetComponent<Canvas>(); 
         if (cardCanvas != null)
             cardCanvas.overrideSorting = true; //enable override sorting for this canvas
 
@@ -147,6 +144,7 @@ public class CardVisual : MonoBehaviour
         originalSortingOrder = order; //store original sorting order
         if (cardCanvas != null)
             cardCanvas.sortingOrder = order; //apply sorting order to canvas
+
     }
 
     public void ResetSortingOrder(int newOrder)

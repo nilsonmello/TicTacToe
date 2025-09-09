@@ -62,7 +62,7 @@ public class CardLayoutManager : MonoBehaviour
             }
         }
     }
-    
+
     public void SimulateDrag(CardInteraction draggedCard, float dragX)
     {
         if (!cards.Contains(draggedCard)) return; //ignore if card not in this panel
@@ -248,5 +248,4 @@ public class CardLayoutManager : MonoBehaviour
     {
         return cards.IndexOf(card); //return index of card in list for sorting
     }
-
 }

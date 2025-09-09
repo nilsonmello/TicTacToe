@@ -40,6 +40,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     [Header("Visual Prefab")]
     public GameObject cardVisualPrefab;
     public CardVisual cardVisualInstance;
+    private int cardsSelected = 0;
 
     private void Awake()
     {
@@ -95,10 +96,18 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         {
             transform.localPosition = targetDragPosition; //directly set position while dragging
         }
+
+        //temporary solution to click on the screen and deselect a card (NEED FIXING)
+        if (Input.GetMouseButtonDown(0))
+        {
+            layoutManager.DeselectCard();
+        }
     }
 
     public void OnPointerMove(PointerEventData eventData)
     {
+        if (!canInteract) return;
+
         if (cardVisualInstance == null || !cardVisualInstance.gameObject.activeSelf) return; //skip if no visual or inactive
 
         RectTransform cardRect = transform as RectTransform;
@@ -242,6 +251,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         layoutManager?.SimulateDrag(this, targetDragPosition.x); //notify layout manager of drag position
+        cardVisualInstance.SetSortingOrder(40); // add to the sorting layer
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -300,11 +310,13 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         layoutManager.ReorderCard(this); //reorder cards in layout
         UpdateVisualSortingOrder(layoutManager.GetCardOrder(this)); //update sorting order
         layoutManager.DeselectCard(); //deselect all cards
+        previousLayoutManager.LayoutCards(); //reorder previous layout
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (layoutManager.IsSelected(this)) return; //ignore hover if selected
+        if (!canInteract) return;
 
         if (cardVisualInstance != null)
         {
@@ -315,6 +327,8 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        if (!canInteract) return;
+
         if (cardVisualInstance != null)
         {
             cardVisualInstance.SetHoverState(false); //clear hover
@@ -352,5 +366,4 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         yield return new WaitUntil(() => cardVisualInstance != null); //wait until visual is instantiated
         cardVisualInstance.SetCard(card); //set card data on visual
     }
-
 }

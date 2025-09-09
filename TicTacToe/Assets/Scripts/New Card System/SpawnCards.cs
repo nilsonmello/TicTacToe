@@ -37,8 +37,15 @@ public class SpawnCards : MonoBehaviour
             }
         }
 
+        StartCoroutine(DelayedLayout());
+    }
+
+    private IEnumerator DelayedLayout()
+    {
+        yield return null;
         layoutManager.LayoutCards();
     }
+
 
     public void SpawnSingleCard()
     {
@@ -70,6 +77,5 @@ public class SpawnCards : MonoBehaviour
 
         layoutManager.cards.Add(interaction);
         layoutManager.LayoutCards();
-
     }
 }

@@ -293,8 +293,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 665, y: -85}
-  m_SizeDelta: {x: -1717.729, y: -946.634}
+  m_AnchoredPosition: {x: 590, y: 115.97}
+  m_SizeDelta: {x: -1795, y: -892.73}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &388800824
 MonoBehaviour:
@@ -445,8 +445,8 @@ Camera:
   m_GameObject: {fileID: 441895834}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0, g: 0.38679248, b: 0.28000954, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -770,7 +770,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -377}
+  m_AnchoredPosition: {x: 0, y: -405.90002}
   m_SizeDelta: {x: -1163.997, y: -946.63}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &633490332
@@ -804,8 +804,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 3250115172970382227, guid: fd336be2ab334b4439f9fc6a91b6f642, type: 3}
   cardParent: {fileID: 633490331}
-  cardTotal: 20
-  spawnCooldown: 1
+  cardTotal: 10
+  spawnCooldown: 0.5
 --- !u!114 &633490334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -894,8 +894,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -728, y: 66}
-  m_SizeDelta: {x: 297.219, y: 96.37}
+  m_AnchoredPosition: {x: 695.99, y: -43}
+  m_SizeDelta: {x: 336.99, y: 108.32}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &808538079
 MonoBehaviour:
@@ -1283,8 +1283,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -730.7716, y: -60.375942}
-  m_SizeDelta: {x: 302.759, y: 108.265}
+  m_AnchoredPosition: {x: -858, y: -435}
+  m_SizeDelta: {x: 124.99, y: 108.265}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1415703531
 MonoBehaviour:
@@ -1481,8 +1481,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 665, y: 124}
-  m_SizeDelta: {x: -1768.1636, y: -847.3791}
+  m_AnchoredPosition: {x: 802, y: 117}
+  m_SizeDelta: {x: -1795.009, y: -892.232}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2131109551
 MonoBehaviour:
