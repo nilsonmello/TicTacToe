@@ -40,75 +40,72 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     [Header("Visual Prefab")]
     public GameObject cardVisualPrefab;
     public CardVisual cardVisualInstance;
-    private int cardsSelected = 0;
 
     private void Awake()
     {
-        rectTransform = GetComponent<RectTransform>(); //cache rect transform reference
-        canvasGroup = GetComponent<CanvasGroup>(); //cache canvas group reference
-        canvas = GetComponentInParent<Canvas>(); //find parent canvas
-        layoutManager = GetComponentInParent<CardLayoutManager>(); //find parent layout manager
+        rectTransform = GetComponent<RectTransform>();
+        canvasGroup = GetComponent<CanvasGroup>();
+        canvas = GetComponentInParent<Canvas>();
+        layoutManager = GetComponentInParent<CardLayoutManager>();
 
         if (canvasGroup == null)
-            canvasGroup = gameObject.AddComponent<CanvasGroup>(); //add canvas group if missing
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-        cardCanvas = GetComponent<Canvas>(); //try to get canvas component
+        cardCanvas = GetComponent<Canvas>();
         if (cardCanvas == null)
         {
-            cardCanvas = gameObject.AddComponent<Canvas>(); //add canvas if missing
-            cardCanvas.overrideSorting = true; //enable override sorting
+            cardCanvas = gameObject.AddComponent<Canvas>();
+            cardCanvas.overrideSorting = true;
         }
 
-        originalSortingOrder = cardCanvas.sortingOrder; //store original sorting order
-        originalRotation = transform.localRotation; //store original local rotation
-        lastPosition = transform.localPosition; //store last local position
+        originalSortingOrder = cardCanvas.sortingOrder;
+        originalRotation = transform.localRotation;
+        lastPosition = transform.localPosition;
     }
 
     private void Start()
     {
         if (cardVisualPrefab != null)
         {
-            GameObject visualObj = Instantiate(cardVisualPrefab, transform.position, transform.rotation); //instantiate visual prefab
+            GameObject visualObj = Instantiate(cardVisualPrefab, transform.position, transform.rotation);
             cardVisualInstance = visualObj.GetComponent<CardVisual>();
 
             if (cardVisualInstance != null)
             {
-                visualObj.transform.SetParent(canvas.transform, false); //set visual as child of canvas (not card)
-
-                cardVisualInstance.SetFollowTarget(transform); //assign card transform for visual to follow
+                visualObj.transform.SetParent(canvas.transform, false);
+                cardVisualInstance.SetFollowTarget(transform);
             }
             else
             {
-                Debug.LogWarning("Cardvisual component missing on prefab."); //warn if prefab missing CardVisual script
+                Debug.LogWarning("CardVisual component missing on prefab.");
             }
         }
         else
         {
-            Debug.LogWarning("No cardvisual prefab assigned to cardinteraction."); //warn if prefab not assigned
+            Debug.LogWarning("No cardVisual prefab assigned to CardInteraction.");
         }
     }
 
     private void Update()
     {
-        if (isMoving) return; //skip if currently moving by coroutine
+        if (isMoving) return;
 
         if (isDragging)
-        {
-            transform.localPosition = targetDragPosition; //directly set position while dragging
-        }
+            transform.localPosition = targetDragPosition;
 
-        //temporary solution to click on the screen and deselect a card (NEED FIXING)
         if (Input.GetMouseButtonDown(0))
         {
-            layoutManager.DeselectCard();
+            if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                layoutManager.DeselectAll();
+            }
         }
     }
 
     public void OnPointerMove(PointerEventData eventData)
     {
         if (!canInteract) return;
-
-        if (cardVisualInstance == null || !cardVisualInstance.gameObject.activeSelf) return; //skip if no visual or inactive
+        if (cardVisualInstance == null || !cardVisualInstance.gameObject.activeSelf) return;
 
         RectTransform cardRect = transform as RectTransform;
 
@@ -120,93 +117,68 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
                 localPoint.y / (cardRect.rect.height / 2f)
             );
 
-            normalizedPos.x = Mathf.Clamp(normalizedPos.x, -0.5f, 0.5f); //clamp normalized hover position x
-            normalizedPos.y = Mathf.Clamp(normalizedPos.y, -0.5f, 0.5f); //clamp normalized hover position y
+            normalizedPos.x = Mathf.Clamp(normalizedPos.x, -0.5f, 0.5f);
+            normalizedPos.y = Mathf.Clamp(normalizedPos.y, -0.5f, 0.5f);
 
-            cardVisualInstance.UpdateHoverMousePosition(normalizedPos); //update visual hover position
+            cardVisualInstance.UpdateHoverMousePosition(normalizedPos);
         }
     }
 
     public void MoveToLocalPosition(Vector3 targetPos)
     {
-        if (isDragging || isMoving) return; //ignore if dragging or already moving
+        if (isDragging || isMoving) return;
 
         if (moveCoroutine != null)
         {
-            StopCoroutine(moveCoroutine); //stop any existing move coroutine
+            StopCoroutine(moveCoroutine);
             moveCoroutine = null;
         }
 
         isMoving = false;
-        moveCoroutine = StartCoroutine(MoveRoutine(targetPos)); //start new smooth move coroutine
+        moveCoroutine = StartCoroutine(MoveRoutine(targetPos));
     }
 
     private IEnumerator MoveRoutine(Vector3 endPos)
     {
-        isMoving = true; //flag moving true
+        isMoving = true;
 
         while (Vector3.Distance(transform.localPosition, endPos) > 0.01f)
         {
-            transform.localPosition = Vector3.MoveTowards(transform.localPosition, endPos, moveSpeed * Time.deltaTime); //move smoothly towards target
+            transform.localPosition = Vector3.MoveTowards(transform.localPosition, endPos, moveSpeed * Time.deltaTime);
             yield return null;
         }
 
-        transform.localPosition = endPos; //ensure exact final position
-
-        moveCoroutine = null; //clear coroutine reference
-        isMoving = false; //flag moving false
+        transform.localPosition = endPos;
+        moveCoroutine = null;
+        isMoving = false;
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (isDragging || isMoving || !canInteract) return; //ignore clicks while dragging or moving or disabled
+        if (isDragging || isMoving || !canInteract) return;
 
         if (layoutManager != null)
         {
-            bool wasSelected = layoutManager.IsSelected(this);
-
-            if (wasSelected)
-            {
-                layoutManager.DeselectCard(); //deselect card in layout
-                if (cardVisualInstance != null)
-                {
-                    cardVisualInstance.DeselectVisual(); //play deselect animation
-                    cardVisualInstance.SetSelectedState(false); //update visual selected state
-                    cardVisualInstance.ReturnSortingLayer(); //restore sorting order
-                }
-            }
-            else
-            {
-                layoutManager.SelectCard(this); //select this card
-                if (cardVisualInstance != null)
-                {
-                    cardVisualInstance.SelectVisual(); //play select animation
-                    cardVisualInstance.SetSelectedState(true); //update visual selected state
-                    cardVisualInstance.SetSortingOrder(1000); //bring to front visually
-                }
-            }
+            layoutManager.SelectCard(this);
         }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!canInteract) return; //ignore if interaction disabled
+        if (!canInteract) return;
 
-        previousLayoutManager = layoutManager; //store current layout manager
-
-        if (layoutManager != null)
-            layoutManager.DeselectAllExcept(null); //deselect all cards
+        previousLayoutManager = layoutManager;
+        layoutManager?.DeselectAllExcept(null);
 
         if (moveCoroutine != null)
         {
-            StopCoroutine(moveCoroutine); //stop moving coroutine if running
+            StopCoroutine(moveCoroutine);
             moveCoroutine = null;
         }
 
         isMoving = false;
-
-        originalParent = transform.parent; //store original parent transform
-        canvasGroup.blocksRaycasts = false; //disable raycast blocking while dragging
+        originalParent = transform.parent;
+        canvasGroup.blocksRaycasts = false;
 
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
             canvas.transform as RectTransform,
@@ -214,25 +186,22 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             eventData.pressEventCamera,
             out Vector3 worldMousePos))
         {
-            dragOffset = transform.position - worldMousePos; //calculate offset between card and pointer
+            dragOffset = transform.position - worldMousePos;
         }
         else
         {
             dragOffset = Vector3.zero;
         }
 
-        transform.SetParent(canvas.transform, true); //reparent card to canvas while dragging
-        isDragging = true; //flag dragging true
+        transform.SetParent(canvas.transform, true);
+        isDragging = true;
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (!canInteract) return; //ignore if interaction disabled
+        if (!canInteract) return;
 
-        if (cardVisualInstance != null)
-        {
-            cardVisualInstance.IndragTweens(); //play drag animation on visual
-        }
+        cardVisualInstance?.IndragTweens();
 
         Camera cam = eventData.pressEventCamera != null ? eventData.pressEventCamera : Camera.main;
 
@@ -243,39 +212,28 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             out Vector3 worldMousePos))
         {
             Vector3 targetWorldPos = worldMousePos + dragOffset;
-            targetDragPosition = canvas.transform.InverseTransformPoint(targetWorldPos); //convert to local canvas pos
-        }
-        else
-        {
-            Debug.LogWarning("Couldn't convert screen to world position."); //warn on conversion failure
+            targetDragPosition = canvas.transform.InverseTransformPoint(targetWorldPos);
         }
 
-        layoutManager?.SimulateDrag(this, targetDragPosition.x); //notify layout manager of drag position
-        cardVisualInstance.SetSortingOrder(40); // add to the sorting layer
+        layoutManager?.SimulateDrag(this, targetDragPosition.x);
+        cardVisualInstance?.SetSortingOrder(40);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        isDragging = false; //flag dragging false
+        isDragging = false;
+        if (!canInteract) return;
 
-        if (!canInteract) return; //ignore if interaction disabled
-
-        if (cardVisualInstance != null)
-        {
-            cardVisualInstance.OffDragTweens(); //play drag end animation
-        }
-
-        canvasGroup.blocksRaycasts = true; //reenable raycast blocking
+        cardVisualInstance?.OffDragTweens();
+        canvasGroup.blocksRaycasts = true;
 
         CardLayoutManager targetLayout = null;
 
-        //find target panel under mouse that accepts this card
         foreach (var layout in CardLayoutManager.AllPanels)
         {
             if (RectTransformUtility.RectangleContainsScreenPoint(layout.GetComponent<RectTransform>(), Input.mousePosition, canvas.worldCamera))
             {
                 var panel = layout.panelData;
-
                 if (panel != null && panel.AcceptsCard(this))
                 {
                     targetLayout = layout;
@@ -286,84 +244,79 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         if (targetLayout != null)
         {
-            if (layoutManager != null)
-                layoutManager.cards.Remove(this); //remove from old layout
+            layoutManager?.cards.Remove(this);
 
-            layoutManager = targetLayout; //set new layout manager
-            layoutManager.cards.Add(this); //add to new layout
-            layoutManager.LayoutCards(); //relayout cards
+            layoutManager = targetLayout;
+            layoutManager.cards.Add(this);
+            layoutManager.LayoutCards();
 
-            layoutManager.panelData.OnCardDropped(this); //notify panel of drop
+            layoutManager.panelData.OnCardDropped(this);
         }
         else
         {
-            layoutManager = previousLayoutManager; //revert to previous layout
+            layoutManager = previousLayoutManager;
 
             if (!layoutManager.cards.Contains(this))
-                layoutManager.cards.Add(this); //add back if missing
+                layoutManager.cards.Add(this);
 
             layoutManager.LayoutCards();
         }
 
-        transform.SetParent(layoutManager.transform, true); //reparent to layout
-        MoveToLocalPosition(transform.localPosition); //move smoothly to local position
-        layoutManager.ReorderCard(this); //reorder cards in layout
-        UpdateVisualSortingOrder(layoutManager.GetCardOrder(this)); //update sorting order
-        layoutManager.DeselectCard(); //deselect all cards
-        previousLayoutManager.LayoutCards(); //reorder previous layout
+        transform.SetParent(layoutManager.transform, true);
+        MoveToLocalPosition(transform.localPosition);
+        layoutManager.ReorderCard(this);
+        UpdateVisualSortingOrder(layoutManager.GetCardOrder(this));
+        layoutManager.DeselectAllExcept(null);
+        previousLayoutManager.LayoutCards();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (layoutManager.IsSelected(this)) return; //ignore hover if selected
+        if (layoutManager.IsSelected(this)) return;
         if (!canInteract) return;
-
-        if (cardVisualInstance != null)
-        {
-            cardVisualInstance.SetHoverState(true); //set hover true
-            cardVisualInstance.PlayPoniterEnter(); //play hover enter animation
-        }
+        cardVisualInstance?.SetHoverState(true);
+        cardVisualInstance?.PlayPoniterEnter();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if (!canInteract) return;
 
-        if (cardVisualInstance != null)
-        {
-            cardVisualInstance.SetHoverState(false); //clear hover
-
-            if (!layoutManager.IsSelected(this))
-                cardVisualInstance.PlayPointerExit(); //play hover exit animation if not selected
-        }
+        cardVisualInstance?.SetHoverState(false);
+        if (!layoutManager.IsSelected(this))
+            cardVisualInstance?.PlayPointerExit();
     }
 
     public void SetLocalPositionInstant(Vector3 pos)
     {
         if (moveCoroutine != null)
         {
-            StopCoroutine(moveCoroutine); //stop move coroutine if running
+            StopCoroutine(moveCoroutine);
             moveCoroutine = null;
         }
 
-        isMoving = false; //flag not moving
-        transform.localPosition = pos; //set position instantly
+        isMoving = false;
+        transform.localPosition = pos;
     }
 
     public void UpdateVisualSortingOrder(int order)
     {
-        if (cardVisualInstance != null)
-            cardVisualInstance.SetOriginalSortingOrder(order); //update visual sorting order
+        cardVisualInstance?.SetOriginalSortingOrder(order);
+        if (cardCanvas != null)
+        {
+            cardCanvas.sortingOrder = order;
+            cardCanvas.overrideSorting = true;
+        }
     }
 
     public void Initialize(Card card)
     {
-        StartCoroutine(DelayedSetCard(card)); //start coroutine to set card data
+        StartCoroutine(DelayedSetCard(card));
     }
 
     private IEnumerator DelayedSetCard(Card card)
     {
-        yield return new WaitUntil(() => cardVisualInstance != null); //wait until visual is instantiated
-        cardVisualInstance.SetCard(card); //set card data on visual
+        yield return new WaitUntil(() => cardVisualInstance != null);
+        cardVisualInstance.SetCard(card);
     }
 }
