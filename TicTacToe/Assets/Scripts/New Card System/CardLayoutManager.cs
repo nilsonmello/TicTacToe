@@ -10,7 +10,7 @@ public class CardLayoutManager : MonoBehaviour
     [Header("Layout Settings")]
     public float dynamicSpacing = 150f;
     public float curveHeight = 100f;
-    public float selectRaise = 40f; 
+    public float selectRaise = 40f;
 
     private List<CardInteraction> selectedCards = new List<CardInteraction>();
     private const int maxSelected = 3;
@@ -42,20 +42,21 @@ public class CardLayoutManager : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             var card = cards[i];
+            if (card == null) continue;
             if (card.IsDragging) continue;
 
             float xPos = (i - centerIndex) * effectiveSpacing;
             float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f;
             float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
 
-            Vector3 targetPos = new Vector3(xPos, yPos, 0);
+            Vector3 targetPos = new Vector3(xPos, yPos, 0f);
             if (selectedCards.Contains(card))
                 targetPos += Vector3.up * selectRaise;
 
             card.MoveToLocalPosition(targetPos);
 
-            if (!selectedCards.Contains(card) && card.cardVisualInstance != null)
-                card.cardVisualInstance.SetSortingOrder(count - i); // manter ordem visual
+            int baseOrder = i * 10;
+            card.UpdateVisualSortingOrder(baseOrder);
         }
     }
 
@@ -123,25 +124,31 @@ public class CardLayoutManager : MonoBehaviour
 
     public void SelectCard(CardInteraction card)
     {
-        if (selectedCards.Contains(card)) return;
+        if (card == null) return;
+
+        if (selectedCards.Contains(card))
+        {
+            DeselectCard(card);
+            return;
+        }
 
         if (selectedCards.Count >= maxSelected)
         {
             CardInteraction oldest = selectedCards[0];
-            if (oldest.cardVisualInstance != null)
+            if (oldest != null && oldest.cardVisualInstance != null)
             {
-                int order = cards.IndexOf(oldest);
+                int order = cards.IndexOf(oldest) * 10;
                 oldest.cardVisualInstance.ResetSortingOrder(order);
-                oldest.cardVisualInstance.DeselectVisual();
-                oldest.cardVisualInstance.SetHoverState(false);
-                oldest.cardVisualInstance.SetSelectedState(false);
+                oldest.cardVisual_instance_safe()?.DeselectVisual();
+                oldest.cardVisual_instance_safe()?.SetHoverState(false);
+                oldest.cardVisual_instance_safe()?.SetSelectedState(false);
             }
             selectedCards.RemoveAt(0);
         }
 
         selectedCards.Add(card);
 
-        if (card != null && card.cardVisualInstance != null)
+        if (card.cardVisualInstance != null)
         {
             card.cardVisualInstance.SelectVisual();
             card.cardVisualInstance.SetSelectedState(true);
@@ -152,11 +159,13 @@ public class CardLayoutManager : MonoBehaviour
 
     public void DeselectCard(CardInteraction card)
     {
+        if (card == null) return;
+
         if (selectedCards.Contains(card))
         {
             if (card.cardVisualInstance != null)
             {
-                int order = cards.IndexOf(card);
+                int order = cards.IndexOf(card) * 10;
                 card.cardVisualInstance.ResetSortingOrder(order);
                 card.cardVisualInstance.DeselectVisual();
                 card.cardVisualInstance.SetSelectedState(false);
@@ -166,20 +175,38 @@ public class CardLayoutManager : MonoBehaviour
         LayoutCards();
     }
 
+    public void DeselectAll()
+    {
+        for (int i = selectedCards.Count - 1; i >= 0; i--)
+        {
+            var c = selectedCards[i];
+            if (c != null && c.cardVisualInstance != null)
+            {
+                c.cardVisualInstance.DeselectVisual();
+                c.cardVisualInstance.SetSelectedState(false);
+                c.cardVisualInstance.ReturnSortingLayer();
+            }
+            selectedCards.RemoveAt(i);
+        }
+        LayoutCards();
+    }
+
     public void DeselectAllExcept(CardInteraction exceptCard)
     {
         for (int i = selectedCards.Count - 1; i >= 0; i--)
         {
             var c = selectedCards[i];
-            if (c != exceptCard && c.cardVisualInstance != null)
+            if (c != exceptCard)
             {
-                c.cardVisualInstance.DeselectVisual();
-                c.cardVisualInstance.SetSelectedState(false);
-                c.cardVisualInstance.ReturnSortingLayer();
+                if (c != null && c.cardVisualInstance != null)
+                {
+                    c.cardVisualInstance.DeselectVisual();
+                    c.cardVisualInstance.SetSelectedState(false);
+                    c.cardVisualInstance.ReturnSortingLayer();
+                }
                 selectedCards.RemoveAt(i);
             }
         }
-
         LayoutCards();
     }
 
@@ -202,6 +229,9 @@ public class CardLayoutManager : MonoBehaviour
                 targetPos += Vector3.up * selectRaise;
 
             card.SetLocalPositionInstant(targetPos);
+
+            int baseOrder = i * 10;
+            card.UpdateVisualSortingOrder(baseOrder);
         }
     }
 
@@ -209,21 +239,12 @@ public class CardLayoutManager : MonoBehaviour
     {
         return cards.IndexOf(card);
     }
+}
 
-    public void DeselectAll()
+public static class CardExtensions
+{
+    public static CardVisual cardVisual_instance_safe(this CardInteraction ci)
     {
-        for (int i = selectedCards.Count - 1; i >= 0; i--)
-        {
-            var c = selectedCards[i];
-            if (c.cardVisualInstance != null)
-            {
-                c.cardVisualInstance.DeselectVisual();
-                c.cardVisualInstance.SetSelectedState(false);
-                c.cardVisualInstance.ReturnSortingLayer();
-            }
-            selectedCards.RemoveAt(i);
-        }
-
-        LayoutCards();
+        return ci == null ? null : ci.cardVisualInstance;
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
+using System.Collections.Generic;
 
 public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler,
     IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler
@@ -51,6 +52,9 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (canvasGroup == null)
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
+        canvasGroup.blocksRaycasts = true;
+        canvasGroup.interactable = true;
+
         cardCanvas = GetComponent<Canvas>();
         if (cardCanvas == null)
         {
@@ -74,6 +78,8 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             {
                 visualObj.transform.SetParent(canvas.transform, false);
                 cardVisualInstance.SetFollowTarget(transform);
+
+                cardVisualInstance.DisableRaycastOnVisual();
             }
             else
             {
@@ -95,7 +101,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject())
             {
                 layoutManager.DeselectAll();
             }
@@ -108,7 +114,6 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (cardVisualInstance == null || !cardVisualInstance.gameObject.activeSelf) return;
 
         RectTransform cardRect = transform as RectTransform;
-
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             cardRect, eventData.position, eventData.enterEventCamera, out Vector2 localPoint))
         {
@@ -156,11 +161,8 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     public void OnPointerClick(PointerEventData eventData)
     {
         if (isDragging || isMoving || !canInteract) return;
-
         if (layoutManager != null)
-        {
             layoutManager.SelectCard(this);
-        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -178,6 +180,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         isMoving = false;
         originalParent = transform.parent;
+
         canvasGroup.blocksRaycasts = false;
 
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
@@ -195,6 +198,8 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         transform.SetParent(canvas.transform, true);
         isDragging = true;
+
+        cardVisualInstance?.SetSortingOrder(10000);
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -216,7 +221,6 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         layoutManager?.SimulateDrag(this, targetDragPosition.x);
-        cardVisualInstance?.SetSortingOrder(40);
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -225,6 +229,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         if (!canInteract) return;
 
         cardVisualInstance?.OffDragTweens();
+
         canvasGroup.blocksRaycasts = true;
 
         CardLayoutManager targetLayout = null;
@@ -265,9 +270,12 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         transform.SetParent(layoutManager.transform, true);
         MoveToLocalPosition(transform.localPosition);
         layoutManager.ReorderCard(this);
-        UpdateVisualSortingOrder(layoutManager.GetCardOrder(this));
+
+        int orderIndex = layoutManager.GetCardOrder(this);
+        UpdateVisualSortingOrder(orderIndex * 10);
+
         layoutManager.DeselectAllExcept(null);
-        previousLayoutManager.LayoutCards();
+        previousLayoutManager?.LayoutCards();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -301,7 +309,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void UpdateVisualSortingOrder(int order)
     {
-        cardVisualInstance?.SetOriginalSortingOrder(order);
+        cardVisualInstance?.SetOriginalSortingOrder(order + 5);
         if (cardCanvas != null)
         {
             cardCanvas.sortingOrder = order;
@@ -318,5 +326,27 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     {
         yield return new WaitUntil(() => cardVisualInstance != null);
         cardVisualInstance.SetCard(card);
+    }
+
+    public static CardInteraction GetTopCardUnderPointer()
+    {
+        if (EventSystem.current == null) return null;
+
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = Input.mousePosition
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        foreach (var r in results)
+        {
+            var ci = r.gameObject.GetComponentInParent<CardInteraction>();
+            if (ci != null)
+                return ci;
+        }
+
+        return null;
     }
 }
