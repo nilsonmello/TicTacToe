@@ -48,7 +48,6 @@ public class DiscardComboButton : MonoBehaviour
 
             discardPanel.panelData?.OnCardDropped(card); //notify panel of card drop if panelData exists
         }
-
         discardPanel.LayoutCards(); //refresh discard panel layout
     }
 }

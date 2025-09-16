@@ -256,6 +256,7 @@ MonoBehaviour:
   dynamicSpacing: 150
   curveHeight: 30
   selectRaise: 20
+  maxSelected: 5
   panelData: {fileID: 0}
 --- !u!1 &388800822
 GameObject:
@@ -293,8 +294,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 590, y: 115.97}
-  m_SizeDelta: {x: -1795, y: -892.73}
+  m_AnchoredPosition: {x: 721.25714, y: -339.16284}
+  m_SizeDelta: {x: -1745.514, y: -827.056}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &388800824
 MonoBehaviour:
@@ -309,9 +310,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cards: []
-  dynamicSpacing: 150
-  curveHeight: 70
+  dynamicSpacing: 50
+  curveHeight: 20
   selectRaise: 40
+  maxSelected: 5
   panelData: {fileID: 388800827}
 --- !u!114 &388800825
 MonoBehaviour:
@@ -789,6 +791,7 @@ MonoBehaviour:
   dynamicSpacing: 80
   curveHeight: 70
   selectRaise: 70
+  maxSelected: 3
   panelData: {fileID: 633490336}
 --- !u!114 &633490333
 MonoBehaviour:
@@ -804,7 +807,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 3250115172970382227, guid: fd336be2ab334b4439f9fc6a91b6f642, type: 3}
   cardParent: {fileID: 633490331}
-  cardTotal: 10
+  cardTotal: 15
   spawnCooldown: 0.5
 --- !u!114 &633490334
 MonoBehaviour:
@@ -894,8 +897,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 695.99, y: -43}
-  m_SizeDelta: {x: 336.99, y: 108.32}
+  m_AnchoredPosition: {x: -667, y: -433}
+  m_SizeDelta: {x: 174.486, y: 101.52}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &808538079
 MonoBehaviour:
@@ -1481,8 +1484,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 802, y: 117}
-  m_SizeDelta: {x: -1795.009, y: -892.232}
+  m_AnchoredPosition: {x: 717, y: 22.385986}
+  m_SizeDelta: {x: -1759.662, y: -847.459}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2131109551
 MonoBehaviour:
@@ -1499,7 +1502,8 @@ MonoBehaviour:
   cards: []
   dynamicSpacing: 0
   curveHeight: 0
-  selectRaise: 40
+  selectRaise: 0
+  maxSelected: 5
   panelData: {fileID: 2131109554}
 --- !u!114 &2131109552
 MonoBehaviour:

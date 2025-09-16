@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class CardLayoutManager : MonoBehaviour
 {
+
     [Header("Cards and list panels")]
     public List<CardInteraction> cards = new List<CardInteraction>();
     public static List<CardLayoutManager> AllPanels = new List<CardLayoutManager>();
@@ -11,9 +12,9 @@ public class CardLayoutManager : MonoBehaviour
     public float dynamicSpacing = 150f;
     public float curveHeight = 100f;
     public float selectRaise = 40f;
-
+    private int maxOffsetOnDrag = 500;
     private List<CardInteraction> selectedCards = new List<CardInteraction>();
-    private const int maxSelected = 3;
+    [SerializeField] private int maxSelected = 5;
 
     [Header("Panel Type")]
     public CardPanel panelData;
@@ -35,7 +36,7 @@ public class CardLayoutManager : MonoBehaviour
         int count = cards.Count;
         if (count == 0) return;
 
-        float maxWidth = 1000f;
+        float maxWidth = 1000;
         float effectiveSpacing = Mathf.Min(dynamicSpacing, maxWidth / Mathf.Max(1, count - 1));
         float centerIndex = (count - 1) / 2f;
 
@@ -213,6 +214,10 @@ public class CardLayoutManager : MonoBehaviour
     private void ApplyLayoutFromList(List<CardInteraction> list, CardInteraction exclude = null)
     {
         int count = list.Count;
+        if (count == 0) return;
+
+        float maxWidth = 1500;
+        float effectiveSpacing = Mathf.Min(dynamicSpacing, maxWidth / Mathf.Max(1, count - 1));
         float centerIndex = (count - 1) / 2f;
 
         for (int i = 0; i < count; i++)
@@ -220,7 +225,7 @@ public class CardLayoutManager : MonoBehaviour
             var card = list[i];
             if (card == exclude) continue;
 
-            float xPos = (i - centerIndex) * dynamicSpacing;
+            float xPos = (i - centerIndex) * effectiveSpacing;
             float normalizedX = centerIndex != 0 ? (i - centerIndex) / centerIndex : 0f;
             float yPos = -Mathf.Pow(normalizedX, 2) * curveHeight + curveHeight;
 

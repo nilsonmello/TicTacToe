@@ -66,9 +66,7 @@ MonoBehaviour:
   shakeVib: 10
   shakeRand: 0.06
   cardCanvas: {fileID: 0}
-  hoverZAmplitude: 2
-  hoverZSpeed: 2
-  savedIndex: 0
+  originalSortingOrder: 0
   maxTiltZ: 10
   maxTiltX: 10
   rotationSmoothSpeed: 8

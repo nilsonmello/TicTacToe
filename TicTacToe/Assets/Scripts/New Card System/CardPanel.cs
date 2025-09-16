@@ -16,11 +16,11 @@ public class CardPanel : MonoBehaviour
         switch (panelType)
         {
             case PanelType.Draw:
-                // No special behavior needed
+                Debug.Log("Returned to Draw panel");
                 break;
 
             case PanelType.Combo:
-                // Optional: trigger visual feedback or effects
+                Debug.Log("Card dropped into Combo panel");
                 break;
 
             case PanelType.Discard:
