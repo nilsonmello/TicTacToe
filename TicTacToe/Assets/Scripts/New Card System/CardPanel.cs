@@ -3,7 +3,6 @@ using UnityEngine;
 public enum PanelType
 {
     Draw,
-    Combo,
     Discard
 }
 
@@ -16,11 +15,6 @@ public class CardPanel : MonoBehaviour
         switch (panelType)
         {
             case PanelType.Draw:
-                Debug.Log("Returned to Draw panel");
-                break;
-
-            case PanelType.Combo:
-                Debug.Log("Card dropped into Combo panel");
                 break;
 
             case PanelType.Discard:
@@ -34,7 +28,6 @@ public class CardPanel : MonoBehaviour
         switch (panelType)
         {
             case PanelType.Draw:
-            case PanelType.Combo:
                 return true;
 
             case PanelType.Discard:

@@ -19,6 +19,8 @@ public class CardLayoutManager : MonoBehaviour
     [Header("Panel Type")]
     public CardPanel panelData;
 
+    public static int globalTopSortingOrder = 1000;
+
     private void OnEnable()
     {
         if (!AllPanels.Contains(this))
@@ -136,23 +138,33 @@ public class CardLayoutManager : MonoBehaviour
         if (selectedCards.Count >= maxSelected)
         {
             CardInteraction oldest = selectedCards[0];
-            if (oldest != null && oldest.cardVisualInstance != null)
+            if (oldest != null && oldest.cardVisual_instance_safe() != null)
             {
+                // Volta sorting order da carta mais antiga
                 int order = cards.IndexOf(oldest) * 10;
-                oldest.cardVisualInstance.ResetSortingOrder(order);
-                oldest.cardVisual_instance_safe()?.DeselectVisual();
-                oldest.cardVisual_instance_safe()?.SetHoverState(false);
-                oldest.cardVisual_instance_safe()?.SetSelectedState(false);
+                oldest.cardVisual_instance_safe().ResetSortingOrder(order);
+                oldest.cardVisual_instance_safe().DeselectVisual();
+                oldest.cardVisual_instance_safe().SetHoverState(false);
+                oldest.cardVisual_instance_safe().SetSelectedState(false);
             }
             selectedCards.RemoveAt(0);
         }
 
         selectedCards.Add(card);
 
-        if (card.cardVisualInstance != null)
+        if (card.cardVisual_instance_safe() != null)
         {
-            card.cardVisualInstance.SelectVisual();
-            card.cardVisualInstance.SetSelectedState(true);
+            card.cardVisual_instance_safe().SelectVisual();
+            card.cardVisual_instance_safe().SetSelectedState(true);
+
+            // Atualiza sortingOrder para ficar acima de todas as outras
+            int topOrder = 0;
+            foreach (var c in cards)
+            {
+                if (c.cardVisual_instance_safe() != null)
+                    topOrder = Mathf.Max(topOrder, c.cardVisual_instance_safe().originalSortingOrder);
+            }
+            card.cardVisual_instance_safe().SetOriginalSortingOrder(topOrder + 10);
         }
 
         LayoutCards();
@@ -243,6 +255,19 @@ public class CardLayoutManager : MonoBehaviour
     public int GetCardOrder(CardInteraction card)
     {
         return cards.IndexOf(card);
+    }
+
+    public List<CardInteraction> GetSelectedCards()
+    {
+        return new List<CardInteraction>(selectedCards);
+    }
+
+    public int SelectedCount => selectedCards.Count;
+
+    public void RemoveCard(CardInteraction card)
+    {
+        if (cards.Contains(card))
+            cards.Remove(card);
     }
 }
 

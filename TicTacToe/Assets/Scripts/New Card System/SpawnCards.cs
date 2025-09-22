@@ -8,6 +8,7 @@ public class SpawnCards : MonoBehaviour
     public GameObject cardPrefab;
     public Transform cardParent;
     private CardLayoutManager layoutManager;
+
     [SerializeField] private int cardTotal = 5;
     [SerializeField] private float spawnCooldown = 0f;
 
@@ -24,47 +25,38 @@ public class SpawnCards : MonoBehaviour
 
         for (int i = 0; i < cardTotal; i++)
         {
-            Card card = CardDatabase.GetRandomCard();
-            if (card != null)
-            {
-                GameObject go = Instantiate(cardPrefab, cardParent);
-                go.name = card.Name;
-
-                CardInteraction interaction = go.GetComponent<CardInteraction>();
-                interaction.Initialize(card);
-
-                layoutManager.cards.Add(interaction);
-            }
+            SpawnCard(initialSpawn: true);
         }
 
-        StartCoroutine(DelayedLayout());
+        StartCoroutine(DelayedInitialLayout());
     }
 
-    private IEnumerator DelayedLayout()
+    private IEnumerator DelayedInitialLayout()
     {
         yield return null;
         layoutManager.LayoutCards();
-    }
 
+        for (int i = 0; i < layoutManager.cards.Count; i++)
+        {
+            layoutManager.cards[i].UpdateVisualSortingOrder(i * 10);
+        }
+    }
 
     public void SpawnSingleCard()
     {
         if (!canSpawn) return;
-
         StartCoroutine(SpawnCardWithCooldown());
     }
 
     private IEnumerator SpawnCardWithCooldown()
     {
         canSpawn = false;
-
-        SpawnCard();
-
+        SpawnCard(initialSpawn: false);
         yield return new WaitForSeconds(spawnCooldown);
         canSpawn = true;
     }
 
-    private void SpawnCard()
+    private void SpawnCard(bool initialSpawn)
     {
         Card card = CardDatabase.GetRandomCard();
         if (card == null) return;
@@ -76,6 +68,19 @@ public class SpawnCards : MonoBehaviour
         interaction.Initialize(card);
 
         layoutManager.cards.Add(interaction);
-        layoutManager.LayoutCards();
+
+        if (!initialSpawn)
+        {
+            layoutManager.LayoutCards();
+
+            int order = layoutManager.GetCardOrder(interaction) * 10;
+            StartCoroutine(DelayedSorting(interaction, order));
+        }
+    }
+
+    private IEnumerator DelayedSorting(CardInteraction interaction, int order)
+    {
+        yield return new WaitUntil(() => interaction.cardVisualInstance != null);
+        interaction.UpdateVisualSortingOrder(order);
     }
 }
