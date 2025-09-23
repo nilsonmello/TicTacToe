@@ -34,7 +34,9 @@ public class CardVisual : MonoBehaviour
     private Vector2 idleVirtualMousePos = Vector2.zero;
     [SerializeField] private float idleOscillationSpeed = 1f;
     [SerializeField] private float idleOscillationAmplitude = 0.5f;
-    [SerializeField] private float scaleRaise = 1.3f;
+    [SerializeField] private float scaleRaise = 0.3f;
+
+    private Vector3 originalScale;
 
     private void Awake()
     {
@@ -51,6 +53,8 @@ public class CardVisual : MonoBehaviour
             artworkImage.raycastTarget = false;
 
         targetRotation = transform.rotation;
+
+        originalScale = transform.localScale;
     }
 
     public void SetFollowTarget(Transform t)
@@ -81,7 +85,11 @@ public class CardVisual : MonoBehaviour
     public void SetSelectedState(bool selected)
     {
         isSelected = selected;
-        if (!selected) { isHovered = false; hoverMousePosition = Vector2.zero; }
+        if (!selected)
+        {
+            isHovered = false;
+            hoverMousePosition = Vector2.zero;
+        }
     }
 
     public void UpdateHoverMousePosition(Vector2 normalizedLocalPos)
@@ -203,36 +211,35 @@ public class CardVisual : MonoBehaviour
     public void PlayPoniterEnter()
     {
         transform.DOKill();
-        transform.localScale = Vector3.one;
-        transform.DOScale(1.05f, 0.3f).SetEase(Ease.OutBack);
-        transform.DOShakePosition(0.1f, 10f, 20, 0);
+        transform.DOScale(originalScale * 1.3f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOShakePosition(0.1f, 2f, 2, 0);
     }
 
     public void PlayPointerExit()
     {
         transform.DOKill();
-        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOScale(originalScale, 0.3f).SetEase(Ease.OutBack);
     }
 
     public void SelectVisual()
     {
-        transform.DOScale(scaleRaise, 0.3f).SetEase(Ease.OutBack);
+        transform.DOScale(originalScale * (1 + scaleRaise), 0.3f).SetEase(Ease.OutBack);
         transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand);
     }
 
     public void DeselectVisual()
     {
-        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOScale(originalScale, 0.3f).SetEase(Ease.OutBack);
         transform.DOShakePosition(shakeDur, shakeStr, shakeVib, shakeRand);
     }
 
     public void IndragTweens()
     {
-        transform.DOScale(scaleRaise, 0.3f).SetEase(Ease.OutBack);
+        transform.DOScale(originalScale * (1 + scaleRaise), 0.3f).SetEase(Ease.OutBack);
     }
 
     public void OffDragTweens()
     {
-        transform.DOScale(1.0f, 0.3f).SetEase(Ease.OutBack);
+        transform.DOScale(originalScale, 0.3f).SetEase(Ease.OutBack);
     }
 }

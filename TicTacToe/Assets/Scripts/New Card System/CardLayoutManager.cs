@@ -140,7 +140,6 @@ public class CardLayoutManager : MonoBehaviour
             CardInteraction oldest = selectedCards[0];
             if (oldest != null && oldest.cardVisual_instance_safe() != null)
             {
-                // Volta sorting order da carta mais antiga
                 int order = cards.IndexOf(oldest) * 10;
                 oldest.cardVisual_instance_safe().ResetSortingOrder(order);
                 oldest.cardVisual_instance_safe().DeselectVisual();
@@ -157,7 +156,6 @@ public class CardLayoutManager : MonoBehaviour
             card.cardVisual_instance_safe().SelectVisual();
             card.cardVisual_instance_safe().SetSelectedState(true);
 
-            // Atualiza sortingOrder para ficar acima de todas as outras
             int topOrder = 0;
             foreach (var c in cards)
             {
@@ -228,7 +226,7 @@ public class CardLayoutManager : MonoBehaviour
         int count = list.Count;
         if (count == 0) return;
 
-        float maxWidth = 1500;
+        float maxWidth = 1200;
         float effectiveSpacing = Mathf.Min(dynamicSpacing, maxWidth / Mathf.Max(1, count - 1));
         float centerIndex = (count - 1) / 2f;
 

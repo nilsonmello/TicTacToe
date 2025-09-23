@@ -142,6 +142,7 @@ MonoBehaviour:
   canInteract: 1
   cardVisualPrefab: {fileID: 2130498763176730331, guid: 04de10a51f7dc2c449e3b530ed27efeb, type: 3}
   cardVisualInstance: {fileID: 0}
+  spawnPoint: {fileID: 0}
 --- !u!225 &7169665038247161446
 CanvasGroup:
   m_ObjectHideFlags: 0

@@ -41,6 +41,7 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
     [Header("Visual Prefab")]
     public GameObject cardVisualPrefab;
     public CardVisual cardVisualInstance;
+    public RectTransform spawnPoint;
 
     private void Awake()
     {
@@ -65,20 +66,35 @@ public class CardInteraction : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         originalSortingOrder = cardCanvas.sortingOrder;
         originalRotation = transform.localRotation;
         lastPosition = transform.localPosition;
+
+        if (spawnPoint == null)
+        {
+            Debug.Log("Auto-finding spawn point 'VisualSpawn' in the scene.");
+
+            GameObject foundObj = GameObject.Find("VisualSpawn");
+            if (foundObj != null)
+            {
+                spawnPoint = foundObj.GetComponent<RectTransform>();
+                Debug.Log("Found spawn point in scene: " + spawnPoint.name);
+            }
+            else
+            {
+                Debug.LogWarning("No object named 'VisualSpawn' found in scene.");
+            }
+        }
     }
 
     private void Start()
     {
         if (cardVisualPrefab != null)
         {
-            GameObject visualObj = Instantiate(cardVisualPrefab, transform.position, transform.rotation);
+            Transform spawnTransform = spawnPoint != null ? spawnPoint : transform;
+            GameObject visualObj = Instantiate(cardVisualPrefab, spawnTransform.position, spawnTransform.rotation);
             cardVisualInstance = visualObj.GetComponent<CardVisual>();
 
             if (cardVisualInstance != null)
             {
-                visualObj.transform.SetParent(canvas.transform, false);
                 cardVisualInstance.SetFollowTarget(transform);
-
                 cardVisualInstance.DisableRaycastOnVisual();
             }
             else

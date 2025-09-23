@@ -30,7 +30,7 @@ RectTransform:
   m_GameObject: {fileID: 2130498763176730331}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -62,8 +62,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   artworkImage: {fileID: 1706775011100659959}
   shakeDur: 0.06
-  shakeStr: 5
-  shakeVib: 10
+  shakeStr: 1
+  shakeVib: 1
   shakeRand: 0.06
   cardCanvas: {fileID: 0}
   originalSortingOrder: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
   rotationSmoothSpeed: 8
   idleOscillationSpeed: 1
   idleOscillationAmplitude: 0.1
-  scaleRaise: 1.1
+  scaleRaise: 0.2
 --- !u!114 &1706775011100659959
 MonoBehaviour:
   m_ObjectHideFlags: 0
