@@ -38,7 +38,6 @@ public class CardLayoutManager : MonoBehaviour
         int count = cards.Count;
         if (count == 0) return;
 
-        // NOVO: se for painel de puxar cartas, não organiza
         if (panelData != null && panelData.panelType == PanelType.Pull)
         {
             for (int i = 0; i < cards.Count; i++)
@@ -51,7 +50,6 @@ public class CardLayoutManager : MonoBehaviour
             return;
         }
 
-        // comportamento padrão
         float maxWidth = 1000;
         float effectiveSpacing = Mathf.Min(dynamicSpacing, maxWidth / Mathf.Max(1, count - 1));
         float centerIndex = (count - 1) / 2f;

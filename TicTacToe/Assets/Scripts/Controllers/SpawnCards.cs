@@ -70,16 +70,15 @@ public class SpawnCards : MonoBehaviour
 
         layoutManager.cards.Add(interaction);
 
-        // se for PullPanel, não faz layout bonito, só "empilha"
+
         if (layoutManager.panelData.panelType == PanelType.Pull)
         {
             int order = layoutManager.cards.Count * 10;
-            interaction.SetLocalPositionInstant(Vector3.zero); // todas na mesma posição
+            interaction.SetLocalPositionInstant(Vector3.zero);
             interaction.UpdateVisualSortingOrder(order);
             return;
         }
 
-        // layout normal
         if (!initialSpawn)
         {
             layoutManager.LayoutCards();

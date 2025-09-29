@@ -4,7 +4,7 @@ public enum PanelType
 {
     Draw,
     Discard,
-    Pull // novo painel de puxar cartas
+    Pull
 }
 
 public class CardPanel : MonoBehaviour
@@ -40,7 +40,7 @@ public class CardPanel : MonoBehaviour
                 return false;
 
             case PanelType.Pull:
-                return false; // não aceita nenhuma carta sendo solta aqui
+                return false;
         }
 
         return false;

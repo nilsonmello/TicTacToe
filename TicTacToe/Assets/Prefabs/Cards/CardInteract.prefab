@@ -88,7 +88,7 @@ GameObject:
   - component: {fileID: 3984400337171040463}
   - component: {fileID: 7169665038247161446}
   m_Layer: 5
-  m_Name: Card
+  m_Name: CardInteract
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -135,7 +135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   layoutManager: {fileID: 0}
-  moveSpeed: 1000
+  moveSpeed: 2000
   followSmoothTime: 0.05
   rotationMultiplier: 0.5
   rotationReturnSpeed: 10
