@@ -3,7 +3,8 @@ using UnityEngine;
 public enum PanelType
 {
     Draw,
-    Discard
+    Discard,
+    Pull // novo painel de puxar cartas
 }
 
 public class CardPanel : MonoBehaviour
@@ -18,7 +19,11 @@ public class CardPanel : MonoBehaviour
                 break;
 
             case PanelType.Discard:
+                Debug.Log("Carta enviada para o descarte.");
+                break;
 
+            case PanelType.Pull:
+                Debug.Log("Cartas não podem ser dropadas no Pull Panel.");
                 break;
         }
     }
@@ -33,6 +38,9 @@ public class CardPanel : MonoBehaviour
             case PanelType.Discard:
                 Debug.Log("Manual drop into Discard is not allowed.");
                 return false;
+
+            case PanelType.Pull:
+                return false; // não aceita nenhuma carta sendo solta aqui
         }
 
         return false;

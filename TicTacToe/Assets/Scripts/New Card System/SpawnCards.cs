@@ -11,6 +11,7 @@ public class SpawnCards : MonoBehaviour
 
     [SerializeField] private int cardTotal = 5;
     [SerializeField] private float spawnCooldown = 0f;
+    [SerializeField] private bool spawnInPullPanel = false; // NOVO toggle
 
     private bool canSpawn = true;
 
@@ -69,10 +70,19 @@ public class SpawnCards : MonoBehaviour
 
         layoutManager.cards.Add(interaction);
 
+        // se for PullPanel, não faz layout bonito, só "empilha"
+        if (layoutManager.panelData.panelType == PanelType.Pull)
+        {
+            int order = layoutManager.cards.Count * 10;
+            interaction.SetLocalPositionInstant(Vector3.zero); // todas na mesma posição
+            interaction.UpdateVisualSortingOrder(order);
+            return;
+        }
+
+        // layout normal
         if (!initialSpawn)
         {
             layoutManager.LayoutCards();
-
             int order = layoutManager.GetCardOrder(interaction) * 10;
             StartCoroutine(DelayedSorting(interaction, order));
         }
